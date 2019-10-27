@@ -1,0 +1,19 @@
+{
+  "name": "pixia",
+  "version": "1.0.0",
+  "description": "Pippintech Axia Library",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eyzi/pixia.git"
+  },
+  "author": "Eyzi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eyzi/pixia/issues"
+  },
+  "homepage": "https://github.com/eyzi/pixia#readme"
+}
