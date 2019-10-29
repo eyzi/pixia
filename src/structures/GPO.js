@@ -7,7 +7,6 @@ const Pin = require("./Pin");
  */
 class Gpo{
 	constructor(data){
-		super();
         this.type = "GPO";
 		this.channel = data.channel;
 		this.device = data.device;

@@ -8,6 +8,7 @@ class Source{
 		this.channel = data.channel;
 		this.name = data.name;
 		this.device = data.device;
+        this.subscribers = new Map();
 		this.levels = new Map();
 	}
 

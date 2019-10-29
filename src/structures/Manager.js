@@ -12,7 +12,7 @@ class Manager extends EventEmitter {
 		this.devices = new Map();
 	}
 
-    async createDevice(data) {
+    addDevice(data) {
         let deviceData = {
             name: data.name || "Axia Device",
             host: data.host || "127.0.0.1",
@@ -22,6 +22,9 @@ class Manager extends EventEmitter {
             pollInterval: data.pollInterval || 200
         };
         let device = new Device(deviceData);
+        device.on("data",data=>{
+            this.emit("lwrp.data",data);
+        });
         this.devices.set(device.host,device);
     }
 

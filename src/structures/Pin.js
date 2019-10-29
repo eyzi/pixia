@@ -5,7 +5,6 @@
  */
 class Pin{
 	constructor(data){
-		super();
 		this.id = data.id;
 		this.gpio = data.gpio;
 		this.value = data.value; // h, l, H, L

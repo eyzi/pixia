@@ -5,11 +5,10 @@
  */
 class Destination{
 	constructor(data){
-		super();
 		this.channel = data.channel;
 		this.name = data.name;
 		this.device = data.device;
-        this.source = data.source;
+        this.source = null;
 		this.level = new Map();
 	}
 

@@ -7,7 +7,6 @@ const Pin = require("./Pin");
  */
 class Gpi{
 	constructor(data){
-		super();
         this.type = "GPI";
 		this.channel = data.channel;
 		this.device = data.device;

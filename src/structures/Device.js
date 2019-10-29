@@ -20,11 +20,13 @@ class Device extends EventEmitter {
 		this.port = data.port || 93;
 		this.pass = data.pass || "";
 		this.reconnect = data.reconnect || 5000;
-		this.pollInterval = options.pollInterval || 200;
+		this.pollInterval = data.pollInterval || 200;
+
 
         // Instance state
         this.running = false;
         this.pollCommands = [];
+        this.info = null;
 
         // Property maps
         this.sources = new Map();
@@ -35,10 +37,10 @@ class Device extends EventEmitter {
         // Telnet connection
 		this.socket = net.Socket();
 		this.socket
-			.on("data",this.socketData)
-            .on("error",this.error);
+			.on("data",data=>this.socketData(data))
+            .on("error",err=>this.error(err));
 
-        initSocket();
+        this.initSocket();
 	}
 
 	login(password){
@@ -73,14 +75,32 @@ class Device extends EventEmitter {
     }
 
     async socketData(data){
-        data.toString().split("\r\n").forEach(chunk=>{
-            let toEmit = this.parseData(chunk);
+        data.toString().split("\r\n").forEach(async chunk=>{
+            let toEmit = await this.parseData(chunk);
             if (!toEmit) return;
+
             this.emit("data",toEmit);
+
+            switch (data) {
+                case "VER":
+                    this.info = data;
+                    if (this.info.NSRC && this.info.NSRC>0)
+                        this.write("SRC");
+
+                    if (this.info.NDST && this.info.NDST>0)
+                        this.write("DST");
+
+                    if (this.info.NGPI && this.info.NGPI>0)
+                        this.write("GPI");
+
+                    if (this.info.NGPO && this.info.NGPO>0)
+                        this.write("GPO");
+                    break;
+            }
         });
     }
 
-	async parseData(chunk) {
+	async parseData(data) {
         if (data.trim()=="") return null;
 
     	let addrRegex	= new RegExp(/(\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3})(?:\s<(.*)>)?/);
