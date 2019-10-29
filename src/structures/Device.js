@@ -15,6 +15,7 @@ class Device extends EventEmitter {
 		super(); // Initialize EventEmitter
 
         // Properties
+        this.manager = data.manager;
 		this.name = data.name || "Axia Device";
 		this.host = data.host || "127.0.0.1";
 		this.port = data.port || 93;
@@ -43,58 +44,160 @@ class Device extends EventEmitter {
         this.initSocket();
 	}
 
-	login(password){
-		return this.write(`LOGIN ${password}`);
-	}
 
-	write(message){
-		if (!this.socket) return this;
-		this.socket.write(`${message}\r\n`);
-		return this;
-	}
 
-    run(){
-        this.login(this.pass);
-        this.write("VER");
-        //
+    async handleDST(data){
+        let dst = this.destinations.get(data.CHANNEL);
+        if (!dst) {
+            dst = new Destination({
+                device: this,
+                channel: data.CHANNEL
+            });
+            this.destinations.set(data.CHANNEL,dst);
+        }
+        await dst.update(data);
+        return;
+    }
+
+    handleSRC(data){
+        let src = this.sources.get(data.CHANNEL);
+        if (!src) {
+            src = new Source({
+                device: this,
+                channel: data.CHANNEL,
+                rtpa: data.RTPA.IP,
+                name: data.RTPA.NAME
+            });
+            this.sources.set(data.CHANNEL,src);
+        }
+
+        src.raw = data;
+        if (data.RTPA) {
+            src.rtpa = data.RTPA.IP;
+            src.name = data.RTPA.NAME;
+        }
+    }
+
+    handleGPI(data){
+        return;
+    }
+
+    handleGPO(data){
+        return;
+    }
+
+    handleMTR(data){
+        return;
+    }
+
+    handleLVL(data){
+        return;
     }
 
 
 
+    getInfo() {
+        this.write("VER");
+    }
 
+    getSources(){
+        if (!this.info) return;
+        if (this.info.NSRC && this.info.NSRC>0) {
+            this.write("SRC");
+        }
+    }
+
+    getDestinations(){
+        if (!this.info) return;
+        if (this.info.NDST && this.info.NDST>0) {
+            this.write("DST");
+        }
+    }
+
+    getGPOs(){
+        if (!this.info) return;
+        if (this.info.NGPO && this.info.NGPO>0)
+            this.write("GPO");
+    }
+
+    getGPIs(){
+        if (!this.info) return;
+        if (this.info.NGPI && this.info.NGPI>0)
+            this.write("GPI");
+    }
+
+
+
+    isReady(property=null){
+        if (!this.info) return false;
+        if (!property) {
+            return (
+                (!this.info.NSRC || this.info.NSRC==this.sources.size) &&
+                (!this.info.NDST || this.info.NDST==this.destinations.size) &&
+                (!this.info.NGPI || this.info.NDST==this.gpis.size) &&
+                (!this.info.NGPO || this.info.NGPO==this.gpos.size)
+            );
+        } else {
+            switch(property){
+                case 'sources':
+                    return !this.info.NSRC || this.info.NSRC==this.sources.size;
+                    break;
+                case 'destinations':
+                    return !this.info.NDST || this.info.NDST==this.destinations.size;
+                    break;
+                case 'gpis':
+                    return !this.info.NGPI || this.info.NDST==this.gpis.size;
+                    break;
+                case 'gpos':
+                    return !this.info.NGPO || this.info.NGPO==this.gpos.size;
+                    break;
+            }
+        }
+    }
+
+    run(){
+        this.login(this.pass);
+        this.write("VER");
+        this.running = true;
+    }
 
     initSocket(){
         if (this.port && this.host) {
             this.socket.connect(this.port,this.host,_=>{
     			this.emit("connected");
-    			this.run();
-                this.runing = true;
     		});
         }
-
     }
 
     async socketData(data){
         data.toString().split("\r\n").forEach(async chunk=>{
-            let toEmit = await this.parseData(chunk);
-            if (!toEmit) return;
+            let parsedData = await this.parseData(chunk);
+            if (!parsedData) return;
 
-            this.emit("data",toEmit);
+            this.emit("data",parsedData);
 
-            switch (data) {
+            switch (parsedData.VERB) {
                 case "VER":
-                    this.info = data;
-                    if (this.info.NSRC && this.info.NSRC>0)
-                        this.write("SRC");
-
-                    if (this.info.NDST && this.info.NDST>0)
-                        this.write("DST");
-
-                    if (this.info.NGPI && this.info.NGPI>0)
-                        this.write("GPI");
-
-                    if (this.info.NGPO && this.info.NGPO>0)
-                        this.write("GPO");
+                    this.info = parsedData;
+                    this.emit("ready");
+                    break;
+                case "DST":
+                    this.handleDST(parsedData);
+                    break;
+                case "SRC":
+                    this.handleSRC(parsedData);
+                    break;
+                case "GPI":
+                    this.handleGPI(parsedData);
+                    break;
+                case "GPO":
+                    this.handleGPO(parsedData);
+                    break;
+                case "MTR":
+                    this.handleMTR(parsedData);
+                    break;
+                case "LVL":
+                    this.handleLVL(parsedData);
                     break;
             }
         });
@@ -246,6 +349,16 @@ class Device extends EventEmitter {
     			}
     		}
     	}
+	}
+
+	login(password){
+		return this.write(`LOGIN ${password}`);
+	}
+
+	write(message){
+		if (!this.socket) return this;
+		this.socket.write(`${message}\r\n`);
+		return this;
 	}
 
     async error(data){

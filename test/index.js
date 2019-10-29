@@ -4,7 +4,7 @@ const Pixia = require("..");
 
 let manager = new Pixia();
 
-manager.addDevice({
+let device = manager.addDevice({
     name: "XNode",
     host: "172.16.0.5"
 });
@@ -12,3 +12,5 @@ manager.addDevice({
 manager.on("lwrp.data",data=>{
     console.log(data);
 });
+
+//device.write('DST');
