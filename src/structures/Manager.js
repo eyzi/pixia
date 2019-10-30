@@ -10,7 +10,6 @@ class Manager extends EventEmitter {
 	constructor(data){
 		super();
 		this.devices = new Map();
-        this.sourcesReady = false;
 	}
 
     addDevice(data) {
@@ -28,42 +27,50 @@ class Manager extends EventEmitter {
             device.run();
         });
         device.on("ready",_=>{
+            this.log(`${device.name} is running`);
             device.getSources();
+            device.getDestinations();
+            device.getGPOs();
+            device.getGPIs();
+            //device.getMeters();
+            //device.getLevels();
         });
         device.on("data",data=>{
-            this.deviceData(data);
+            switch(data.VERB) {
+                case "SRC":
+                    this.refreshSources();
+                    this.handleData();
+                    break;
+                case "BEGIN": case "END": default:
+                    break;
+            }
+            if (!this.allReady && device.isReady()) {
+                this.emit("ready.device",device);
+            } else {
+                this.handleData(data);
+                this.emit("data.lwrp",data);
+            }
         });
         this.devices.set(device.host,device);
         return device;
     }
 
-    checkSources() {
-        let allReady = true;
-        this.devices.forEach(d=>{
-            if (!d.isReady('sources'))
-                allReady = false;
-        });
-        if (!this.sourcesReady && allReady) {
-            this.log(`All sources are now ready.`);
-            this.sourcesReady = true;
-            this.log(`Getting destinations of devices.`);
-            this.devices.forEach(d=>{
-                d.getDestinations();
+    async refreshSources(){
+        this.devices.forEach(async device=>{
+            device.destinations.forEach(async dst=>{
+                if (dst.source && typeof dst.source==='string') {
+                    let src = this.getSource(this.source);
+                    if (src) {
+                        dst.source = src;
+                        src.addSub(this);
+                    }
+                }
             });
-        }
+        });
     }
 
     handleData(data){
 
-    }
-
-    deviceData(data){
-        console.log(data.VERB);
-        if (!this.sourcesReady) {
-            return this.checkSources();
-        } else {
-            return this.handleData(data);
-        }
     }
 
     getSource(rtpa){
@@ -84,7 +91,7 @@ class Manager extends EventEmitter {
     }
 
     log(message){
-        console.log(message);
+        this.emit("log",message);
     }
 }
 

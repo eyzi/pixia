@@ -59,14 +59,14 @@ class Device extends EventEmitter {
         return;
     }
 
-    handleSRC(data){
+    async handleSRC(data){
         let src = this.sources.get(data.CHANNEL);
         if (!src) {
             src = new Source({
                 device: this,
                 channel: data.CHANNEL,
                 rtpa: data.RTPA.IP,
-                name: data.RTPA.NAME
+                name: data.RTPA.NAME || `${this.name} Ch#${data.CHANNEL}`
             });
             this.sources.set(data.CHANNEL,src);
         }
@@ -78,19 +78,19 @@ class Device extends EventEmitter {
         }
     }
 
-    handleGPI(data){
+    async handleGPI(data){
         return;
     }
 
-    handleGPO(data){
+    async handleGPO(data){
         return;
     }
 
-    handleMTR(data){
+    async handleMTR(data){
         return;
     }
 
-    handleLVL(data){
+    async handleLVL(data){
         return;
     }
 
@@ -134,7 +134,7 @@ class Device extends EventEmitter {
             return (
                 (!this.info.NSRC || this.info.NSRC==this.sources.size) &&
                 (!this.info.NDST || this.info.NDST==this.destinations.size) &&
-                (!this.info.NGPI || this.info.NDST==this.gpis.size) &&
+                (!this.info.NGPI || this.info.NGPI==this.gpis.size) &&
                 (!this.info.NGPO || this.info.NGPO==this.gpos.size)
             );
         } else {
@@ -146,7 +146,7 @@ class Device extends EventEmitter {
                     return !this.info.NDST || this.info.NDST==this.destinations.size;
                     break;
                 case 'gpis':
-                    return !this.info.NGPI || this.info.NDST==this.gpis.size;
+                    return !this.info.NGPI || this.info.NGPI==this.gpis.size;
                     break;
                 case 'gpos':
                     return !this.info.NGPO || this.info.NGPO==this.gpos.size;
@@ -174,32 +174,32 @@ class Device extends EventEmitter {
             let parsedData = await this.parseData(chunk);
             if (!parsedData) return;
 
-            this.emit("data",parsedData);
-
             switch (parsedData.VERB) {
                 case "VER":
                     this.info = parsedData;
                     this.emit("ready");
                     break;
                 case "DST":
-                    this.handleDST(parsedData);
+                    await this.handleDST(parsedData);
                     break;
                 case "SRC":
-                    this.handleSRC(parsedData);
+                    await this.handleSRC(parsedData);
                     break;
                 case "GPI":
-                    this.handleGPI(parsedData);
+                    await this.handleGPI(parsedData);
                     break;
                 case "GPO":
-                    this.handleGPO(parsedData);
+                    await this.handleGPO(parsedData);
                     break;
                 case "MTR":
-                    this.handleMTR(parsedData);
+                    await this.handleMTR(parsedData);
                     break;
                 case "LVL":
-                    this.handleLVL(parsedData);
+                    await this.handleLVL(parsedData);
                     break;
             }
+
+            this.emit("data",parsedData);
         });
     }
 
