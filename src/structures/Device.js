@@ -6,6 +6,7 @@ const Gpo = require("./Gpo");
 const Gpi = require("./Gpi");
 const Source = require("./Source");
 const Destination = require("./Destination");
+const PollCommand = require("./PollCommand");
 
 /**
  * An Axia device that uses lwrp
@@ -26,7 +27,8 @@ class Device extends EventEmitter {
 
         // Instance state
         this.running = false;
-        this.pollCommands = [];
+        this.pollCommands = new Map;
+		this.poller = null;
         this.info = null;
 
         // Property maps
@@ -79,19 +81,65 @@ class Device extends EventEmitter {
     }
 
     async handleGPI(data){
-        return;
+        let gpi = this.gpis.get(data.CHANNEL);
+        if (gpi) {
+            gpi = new Gpi({
+                device: this,
+                channel: data.CHANNEL
+            });
+        }
+
+        gpi.raw = data;
+        gpi.setStates(data.STATE);
     }
 
     async handleGPO(data){
-        return;
+        let gpo = this.gpos.get(data.CHANNEL);
+        if (gpo) {
+            gpo = new Gpo({
+                device: this,
+                channel: data.CHANNEL
+            });
+        }
+
+        gpo.raw = data;
+        gpo.setStates(data.STATE);
     }
 
     async handleMTR(data){
-        return;
+        switch (data.TYPE) {
+            case "ICH":
+                let src = this.sources.get(data.CHANNEL);
+                if (src) {
+                    src.setMeter(data);
+                }
+                break;
+            case "OCH":
+                let dst = this.destinations.get(data.CHANNEL);
+                if (dst) {
+                    dst.setMeter(data);
+                }
+                break;
+        }
+        this.emit("data.meter",data);
     }
 
     async handleLVL(data){
-        return;
+        switch(data.TYPE){
+            case "ICH":
+                let src = this.sources.get(data.CHANNEL);
+                if (src) {
+                    src.setLevel(data);
+                }
+                break;
+            case "OCH":
+                let dst = this.destinations.get(data.CHANNEL);
+                if (dst) {
+                    dst.setLevel(data);
+                }
+                break;
+        }
+        this.emit("data.level",data);
     }
 
 
@@ -124,6 +172,18 @@ class Device extends EventEmitter {
         if (!this.info) return;
         if (this.info.NGPI && this.info.NGPI>0)
             this.write("GPI");
+    }
+
+    getMeters(){
+        this.addCommand({
+            id: 'MTR',
+            command: 'MTR'
+        });
+    }
+
+    getLevels(){
+        return;
+        // this.write(`LVL`)
     }
 
 
@@ -159,6 +219,22 @@ class Device extends EventEmitter {
         this.login(this.pass);
         this.write("VER");
         this.running = true;
+        this.poller = setInterval(_=>{
+            this.pollCommands.forEach((pc,key)=>{
+                let c = pc.command;
+                this.write(c);
+                pc.updateCount();
+                if (!pc.isValid()) {
+                    this.pollCommands.delete(pc.id);
+                }
+            });
+        },this.pollInterval);
+    }
+
+    stop(){
+        clearInterval(this.poller);
+        this.running = false;
+        this.socket = net.Socket();
     }
 
     initSocket(){
@@ -350,6 +426,17 @@ class Device extends EventEmitter {
     		}
     	}
 	}
+
+    removeCommand(id){
+        this.pollCommands.delete(id);
+    }
+
+    addCommand(data={}){
+        if (data.id && data.command) {
+            let pc = new PollCommand(data);
+            this.pollCommands.set(data.id,pc);
+        }
+    }
 
 	login(password){
 		return this.write(`LOGIN ${password}`);

@@ -32,10 +32,11 @@ class Manager extends EventEmitter {
             device.getDestinations();
             device.getGPOs();
             device.getGPIs();
-            //device.getMeters();
-            //device.getLevels();
+            device.getMeters();
+            device.getLevels();
         });
         device.on("data",data=>{
+            console.log(data);
             switch(data.VERB) {
                 case "SRC":
                     this.refreshSources();
@@ -47,9 +48,21 @@ class Manager extends EventEmitter {
             if (!this.allReady && device.isReady()) {
                 this.emit("ready.device",device);
             } else {
-                this.handleData(data);
-                this.emit("data.lwrp",data);
+                switch(data.VERB) {
+                    case "BEGIN": case "END":
+                        break;
+                    default:
+                        this.handleData(data);
+                        this.emit("data.lwrp",data);
+                        break;
+                }
             }
+        });
+        device.on("data.meter",data=>{
+            this.emit("data.meter",data);
+        });
+        device.on("data.level",data=>{
+            this.emit("data.level",data);
         });
         this.devices.set(device.host,device);
         return device;

@@ -10,16 +10,28 @@ class Gpi{
         this.type = "GPI";
 		this.channel = data.channel;
 		this.device = data.device;
+        this.raw = data.raw;
 		this.pins = new Map();
 	}
 
-    async addPin(id,value="l"){
-        let pin = new Pin({
-            id: id,
-            gpio: this,
-            value: value
+    setPin(id,value='l'){
+        let p = this.pins.get(id);
+        if (!p) {
+            p = new Pin({
+                gpio: this,
+                id: id,
+                value: value
+            });
+        }
+        this.pins.set(id,p);
+    }
+
+    setStates(state){
+        // divide string, each digit is one pin
+        let stateArray = state.split('');
+        stateArray.forEach((s,i)=>{
+            this.setPin(i,s);
         });
-        this.pins.set(id,pin);
     }
 
 	toString(){

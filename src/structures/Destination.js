@@ -10,10 +10,32 @@ class Destination{
 		this.addr = data.addr;
         this.name = data.name;
 
-        this.raw = null;
+        this.lowTime = null;
+        this.lowLevel = null;
+        this.clipTime = null;
+        this.clipLevel = null;
 
+        this.raw = null;
         this.source = null;
-		this.level = new Map();
+
+        this.meter = {
+            peek: {
+                left: {
+                    value: -1000,
+                    low: true
+                },
+                right: {
+                    value: -1000,
+                    low: true
+                }
+            },
+            rms: {
+                left: -1000,
+                right: -1000
+            }
+        }
+
+        this.setSilenceSense(data);
 	}
 
     // take DST data and handle
@@ -37,6 +59,38 @@ class Destination{
                 this.source = src.RTPA.IP;
             }
         }
+    }
+
+    setLevel(data){
+
+        switch (data.SIDE) {
+            case "L":
+
+                break;
+            case "R":
+
+                break;
+        }
+        return;
+    }
+
+    setMeter(data){
+        if (data.PEEK) {
+            this.meter.peek.value.left = data.PEEK.LEFT;
+            this.meter.peek.value.right = data.PEEK.RIGHT;
+        }
+        if (data.RMS) {
+            this.meter.rms.left = data.RMS.LEFT;
+            this.meter.rms.right = data.RMS.RIGHT;
+        }
+    }
+
+    setSilenceSense(data){
+        this.clipLevel = data.clipLevel || 0;
+        this.clipTime = data.clipTime || 3000;
+        this.lowLevel = data.lowLevel || -1000;
+        this.lowTime = data.lowTime || 3000;
+        this.device.write(`LVL OCH ${ this.channel } LOW.LEVEL=${ this.lowLevel } LOW.TIME=${ this.lowTime } CLIP.LEVEL=${ this.clipLevel } CLIP.TIME=${ this.clipTime }`);
     }
 
 	toString(){

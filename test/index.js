@@ -8,10 +8,8 @@ manager.on("log",message=>{
     console.log(message);
 });
 
-manager.on("ready.device",d=>{
-    d.sources.forEach(s=>{
-        console.log(s.subscribers);
-    });
+manager.on("data.level",d=>{
+    console.log(d);
 });
 
 let device = manager.addDevice({
