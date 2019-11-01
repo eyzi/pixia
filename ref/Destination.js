@@ -9,6 +9,7 @@ class Destination{
 		this.channel = data.channel;
 		this.addr = data.addr;
         this.name = data.name;
+        this.sides = data.sides;
 
         this.lowTime = null;
         this.lowLevel = null;
@@ -18,22 +19,19 @@ class Destination{
         this.raw = null;
         this.source = null;
 
-        this.meter = {
-            peek: {
-                left: {
-                    value: -1000,
-                    low: true
-                },
-                right: {
-                    value: -1000,
-                    low: true
-                }
-            },
-            rms: {
-                left: -1000,
-                right: -1000
-            }
-        }
+        this.left = {
+            peek: -1000,
+            rms: -1000,
+            low: true,
+            clip: false,
+        };
+
+        this.right = {
+            peek: -1000,
+            rms: -1000,
+            low: true,
+            clip: false,
+        };
 
         this.setSilenceSense(data);
 	}
@@ -62,13 +60,19 @@ class Destination{
     }
 
     setLevel(data){
-
-        switch (data.SIDE) {
-            case "L":
-
+        let side = (data.SIDE=='L') ? this.left : this.right;
+        switch (data.FORM) {
+            case "LOW":
+                side.low = true;
                 break;
-            case "R":
-
+            case "NO-LOW":
+                side.low = false;
+                break;
+            case "CLIP":
+                side.clip = true;
+                break;
+            case "NO-CLIP":
+                side.clip = false;
                 break;
         }
         return;

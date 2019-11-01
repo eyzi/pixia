@@ -53,7 +53,8 @@ class Device extends EventEmitter {
         if (!dst) {
             dst = new Destination({
                 device: this,
-                channel: data.CHANNEL
+                channel: data.CHANNEL,
+                sides: data.NCHN
             });
             this.destinations.set(data.CHANNEL,dst);
         }
@@ -68,7 +69,8 @@ class Device extends EventEmitter {
                 device: this,
                 channel: data.CHANNEL,
                 rtpa: data.RTPA.IP,
-                name: data.RTPA.NAME || `${this.name} Ch#${data.CHANNEL}`
+                name: data.RTPA.NAME || `${this.name} Ch#${data.CHANNEL}`,
+                sides: data.NCHN
             });
             this.sources.set(data.CHANNEL,src);
         }

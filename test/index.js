@@ -8,7 +8,7 @@ manager.on("log",message=>{
     console.log(message);
 });
 
-manager.on("data.level",d=>{
+manager.on("data",d=>{
     console.log(d);
 });
 
