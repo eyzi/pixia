@@ -9,8 +9,8 @@ class Lwrp extends EventEmitter{
         super();
 
         this.host = data.host;
-        this.port = data.port;
-        this.pass = data.pass;
+        this.port = data.port || 93;
+        this.pass = data.pass || '';
 
         this.reconnect = data.reconnect || 5000;
         this.pollInterval = data.pollInterval || 200;

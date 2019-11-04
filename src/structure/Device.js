@@ -14,8 +14,6 @@ class Device extends EventEmitter{
 
         this.name = data.name || 'Axia Device';
         this.host = data.host;
-        this.port = data.port || 93;
-        this.pass = data.pass || '';
         this.manager = data.manager;
 
         this.lwrp = new Lwrp(data);
