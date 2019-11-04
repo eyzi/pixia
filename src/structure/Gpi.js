@@ -13,3 +13,5 @@ class Gpi extends Gpio{
         });
     }
 }
+
+module.exports=Gpi;

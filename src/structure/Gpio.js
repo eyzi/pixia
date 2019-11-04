@@ -30,7 +30,7 @@ const LwrpData = require("../util/LwrpData");
         let verb = dataArray.shift();
         let channel = dataArray.shift();
         let states = dataArray.shift();
-        return {verb,channel,states}
+        return {verb,channel,states};
     }
 
     // TODO write change state to device lwrp
@@ -47,4 +47,4 @@ const LwrpData = require("../util/LwrpData");
  	}
  }
 
- module.exports = GpioPin;
+ module.exports=Gpio;

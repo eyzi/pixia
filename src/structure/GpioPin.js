@@ -45,4 +45,4 @@ class GpioPin extends EventEmitter{
 	}
 }
 
-module.exports = GpioPin;
+module.exports=GpioPin;
