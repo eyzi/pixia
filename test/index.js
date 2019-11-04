@@ -4,15 +4,18 @@ const Pixia = require("..");
 
 let manager = new Pixia();
 
-manager.on("log",message=>{
-    console.log(message);
-});
-
-manager.on("data",d=>{
-    console.log(d);
-});
-
 let device = manager.addDevice({
     name: "XNode",
     host: "172.16.0.5"
 });
+
+device
+.on("ready",_=>{
+    console.log("test");
+})
+.on("data",data=>{
+    console.log(data);
+})
+.on("error",error=>{
+    console.log(error);
+})
