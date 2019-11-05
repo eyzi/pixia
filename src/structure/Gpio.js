@@ -1,7 +1,7 @@
 "use strict";
 
 const GpioPin = require("./GpioPin");
-const LwrpData = require("../util/LwrpData");
+const Parser = require("../util/Parser");
 
 /**
  * Axia GPIO channel
@@ -26,7 +26,7 @@ const LwrpData = require("../util/LwrpData");
  	}
 
     static parse(raw){
-        let dataArray = LwrpData.delimit(raw);
+        let dataArray = Parser.DelimitSpace(raw);
         let verb = dataArray.shift();
         let channel = dataArray.shift();
         let states = dataArray.shift();

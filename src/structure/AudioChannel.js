@@ -2,7 +2,10 @@
 
 class AudioChannel{
     constructor(data){
-        // TODO
+        this.id = data.id;
+
+        this.peek = -1000;
+        this.rms = -1000;
     }
 }
 

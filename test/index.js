@@ -10,9 +10,6 @@ let device = manager.addDevice({
 });
 
 device
-.on("ready",_=>{
-    console.log("test");
-})
 .on("data",data=>{
     console.log(data);
 })

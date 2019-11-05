@@ -30,6 +30,7 @@ class Lwrp extends EventEmitter{
     initSocket(){
         if (this.host) {
             this.socket.connect(this.port,this.host,_=>{
+                this.running=true;
                 this.emit("connected");
             });
         }
@@ -57,7 +58,11 @@ class Lwrp extends EventEmitter{
     }
 
     async socketData(data){
-        this.emit("data",data);
+        data.toString().split("\r\n").forEach(async chunk=>{
+            if (chunk) {
+                this.emit("data",chunk);
+            }
+        });
     }
 
     async socketError(error){
