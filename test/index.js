@@ -9,13 +9,10 @@ let device = manager.addDevice({
     host: "172.16.0.5"
 });
 
-device
-.on("data",data=>{
-    // console.log(device);
-})
-.on("running",data=>{
-    console.log("running");
+manager
+.on("destination",data=>{
+    console.log(data.source);
 })
 .on("error",error=>{
-    console.log(error);
-})
+    console.error(error);
+});

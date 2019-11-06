@@ -85,7 +85,7 @@ class Device extends EventEmitter{
             });
             this.sources.set(data.CHANNEL,src);
         }
-        src.update(data);
+        await src.update(data);
         this.emit('source',src);
     }
 
@@ -99,7 +99,8 @@ class Device extends EventEmitter{
             });
             this.destinations.set(data.CHANNEL,dst);
         }
-        dst.update(data);
+        await dst.update(data);
+        this.emit('destination',dst);
     }
 
     async handleGpi(data){
@@ -111,7 +112,8 @@ class Device extends EventEmitter{
                 ...data
             });
         }
-        gpi.update(data);
+        await gpi.update(data);
+        this.emit('gpi',gpi);
     }
 
     async handleGpo(data){
@@ -123,7 +125,8 @@ class Device extends EventEmitter{
                 ...data
             });
         }
-        gpo.update(data);
+        await gpo.update(data);
+        this.emit('gpo',gpo);
     }
 
     async handleMeter(data){
@@ -139,6 +142,7 @@ class Device extends EventEmitter{
         if (!stream) return;
 
         stream.setMeter(data);
+        this.emit('meter',stream.getMeter());
     }
 
 

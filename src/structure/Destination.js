@@ -1,6 +1,7 @@
 "use strict";
 
 const AudioStream = require("./AudioStream");
+const Source = require("./Source");
 
 class Destination extends AudioStream{
     constructor(data){
@@ -14,8 +15,27 @@ class Destination extends AudioStream{
             chCount:data.NCHN,
             streamType:'DST'
         });
-        console.log(this);
-        this.source = null;
+    }
+
+    subscribe(src){
+        if (!(src instanceof Source)) return;
+        if (this.source instanceof Source) {
+            this.source.removeSub(this);
+        }
+        src.addSub(this);
+    }
+
+    async fixSource(){
+        if (this.address) {
+            let src = await this.manager.findSource(this.address)
+            if (src) {
+                this.subscribe(src);
+            } else {
+                this.source = this.address;
+            }
+        } else {
+            this.source = null;
+        }
     }
 
     async update(data){
@@ -23,9 +43,8 @@ class Destination extends AudioStream{
         let addrMatch = data.ADDR.match(ipRegex);
         this.raw = data;
         this.name = data.NAME;
-        this.address = addrMatch
-            ? await this.manager.findSource(addrMatch[0])
-            : data.ADDR;
+        this.address = addrMatch ? addrMatch[0] : null;
+        this.fixSource();
     }
 }
 

@@ -22,10 +22,10 @@ class Source extends AudioStream{
         let dstKey = `${dst.device.host}/${dst.channel}`;
         this.subscribers.delete(dstKey);
         dst.source = null;
+        console.log(this.subscribers);
     }
 
     addSub(dst){
-        dst.source.removeSub(dst);
         let dstKey = `${dst.device.host}/${dst.channel}`;
         this.subscribers.set(dstKey,dst);
         dst.source = this;

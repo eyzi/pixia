@@ -41,11 +41,24 @@ class AudioStream{
         }
     }
 
+    getMeter(){
+        return {
+            left: this.channels.get('LEFT'),
+            right: this.channels.get('RIGHT'),
+        };
+    }
+
     setMeter(data){
         if (data.PEEK) {
             for (let channel in data.PEEK) {
                 let audioCh = this.channels.get(channel);
                 if (audioCh) audioCh.peek = data.PEEK[channel];
+            }
+        }
+        if (data.RMS) {
+            for (let channel in data.RMS) {
+                let audioCh = this.channels.get(channel);
+                if (audioCh) audioCh.rms = data.RMS[channel];
             }
         }
     }
