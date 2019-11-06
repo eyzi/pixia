@@ -11,11 +11,27 @@ class Source extends AudioStream{
             channel:data.CHANNEL,
             name:data.PSNM,
             address:data.RTPA,
-            chCount:data.NCHN
+            chCount:data.NCHN,
+            streamType:'SRC'
         });
+
+        this.subscribers = new Map();
     }
 
-    update(data){
+    removeSub(dst){
+        let dstKey = `${dst.device.host}/${dst.channel}`;
+        this.subscribers.delete(dstKey);
+        dst.source = null;
+    }
+
+    addSub(dst){
+        dst.source.removeSub(dst);
+        let dstKey = `${dst.device.host}/${dst.channel}`;
+        this.subscribers.set(dstKey,dst);
+        dst.source = this;
+    }
+
+    async update(data){
         this.raw = data;
         this.name = data.PSNM;
         this.address = data.RTPA;

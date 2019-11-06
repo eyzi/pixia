@@ -26,6 +26,16 @@ class Manager extends EventEmitter{
             device.getGpis();
             device.getGpos();
         });
+        device.on("data",data=>{
+            if (
+                device.srcCount==device.sources.size &&
+                device.dstCount==device.destinations.size &&
+                !device.hasCommand("MTR")
+            ) {
+                device.getMeters();
+            }
+            this.emit("data",data);
+        });
         device.on("source",src=>{
             this.handleSource(src);
         });
@@ -34,10 +44,22 @@ class Manager extends EventEmitter{
 
     async findSource(address){
         let src = this.sources.get(address);
+        if (src) return src;
+        else return address;
     }
 
-    handleSource(src){
+    async handleSource(src){
+        let srcCheck = this.sources.get(src.address);
+        if (srcCheck) return;
+
         this.sources.set(src.address,src);
+        this.devices.forEach(device=>{
+            device.destinations.forEach(dst=>{
+                if (typeof dst.address=='string' && dst.address==src.address) {
+                    src.addSub(dst);
+                }
+            });
+        });
     }
 }
 

@@ -11,18 +11,12 @@ const Parser = require("../util/Parser");
         this.raw = data.raw;
         this.type = data.type;
         this.device = data.device;
+        this.manager = data.manager;
         this.channel = data.channel;
 
         this.pins = new Map();
 
-        data.states.split("").forEach((state,index)=>{
-            let pin = new GpioPin({
-                gpio: this,
-                id: index+1, // index starts at 0
-                state: state
-            });
-            this.pins.set(id,pin);
-        });
+        setPins();
  	}
 
     static parse(raw){
@@ -33,6 +27,17 @@ const Parser = require("../util/Parser");
         return {verb,channel,states};
     }
 
+    setPins(){
+        data.states.split("").forEach((state,index)=>{
+            let pin = new GpioPin({
+                gpio: this,
+                id: index+1, // index starts at 0
+                state: state
+            });
+            this.pins.set(id,pin);
+        });
+    }
+
     // TODO write change state to device lwrp
     writePin(id,state="l"){
         let stateString = "";
@@ -40,6 +45,10 @@ const Parser = require("../util/Parser");
             stateString += (i==id)?state:"x";
         }
         this.device.write(`${this.type} ${this.channel} ${stateString}`);
+    }
+
+    async update(data) {
+        this.states = data.states;
     }
 
  	toString(){

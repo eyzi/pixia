@@ -20,6 +20,7 @@ class Device extends EventEmitter{
         this.lwrp = new Lwrp(data);
         this.lwrp
             .on("connected",_=>this.handleConnection())
+            .on("running",data=>this.handleRunning())
             .on("data",data=>this.handleData(data))
             .on("error",error=>this.handleError(error));
 
@@ -34,6 +35,10 @@ class Device extends EventEmitter{
         this.getVersion();
     }
 
+    async handleRunning(){
+        this.emit("running");
+    }
+
     async handleData(data){
         let parsed = Parser.Parse(data);
         switch (parsed.VERB) {
@@ -46,8 +51,11 @@ class Device extends EventEmitter{
             case 'DST':
                 await this.handleDestination(parsed);
                 break;
+            case 'MTR':
+                await this.handleMeter(parsed);
+                break;
         }
-        //this.emit("data",parsed);
+        this.emit("data",parsed);
     }
 
     async handleVersion(data){
@@ -72,8 +80,10 @@ class Device extends EventEmitter{
         if(!src){
             src = new Source({
                 device:this,
-                manager:this.manager
+                manager:this.manager,
+                ...data
             });
+            this.sources.set(data.CHANNEL,src);
         }
         src.update(data);
         this.emit('source',src);
@@ -84,10 +94,51 @@ class Device extends EventEmitter{
         if(!dst){
             dst = new Destination({
                 device:this,
-                manager:this.manager
+                manager:this.manager,
+                ...data
             });
+            this.destinations.set(data.CHANNEL,dst);
         }
         dst.update(data);
+    }
+
+    async handleGpi(data){
+        let gpi = this.gpis.get(data.CHANNEL);
+        if(!gpi){
+            gpi = new Gpi({
+                device:this,
+                manager:this.manager,
+                ...data
+            });
+        }
+        gpi.update(data);
+    }
+
+    async handleGpo(data){
+        let gpo = this.gpos.get(data.CHANNEL);
+        if(!gpo){
+            gpo = new Gpo({
+                device:this,
+                manager:this.manager,
+                ...data
+            });
+        }
+        gpo.update(data);
+    }
+
+    async handleMeter(data){
+        let stream;
+        switch(data.TYPE){
+            case 'ICH':
+                stream = this.sources.get(data.CHANNEL);
+                break;
+            case 'OCH':
+                stream = this.destinations.get(data.CHANNEL);
+                break;
+        }
+        if (!stream) return;
+
+        stream.setMeter(data);
     }
 
 
@@ -106,16 +157,20 @@ class Device extends EventEmitter{
         }
     }
 
-    getGpis(password=this.pass){
+    getGpis(){
         if (this.gpiCount && this.gpiCount>0) {
             this.write(`ADD GPI`);
         }
     }
 
-    getGpos(password=this.pass){
+    getGpos(){
         if (this.gpoCount && this.gpoCount>0) {
             this.write(`ADD GPO`);
         }
+    }
+
+    getMeters(){
+        this.lwrp.addCommand(`MTR`);
     }
 
     getVersion(password=this.pass){
@@ -125,6 +180,9 @@ class Device extends EventEmitter{
 
 
 
+    hasCommand(command){
+        return this.lwrp.hasCommand(command);
+    }
 
     async handleError(error){
         this.emit("error",new Error(error));

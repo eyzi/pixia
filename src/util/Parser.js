@@ -3,16 +3,36 @@
 let ParseProperty = function(string=""){
     if (string.trim()=="") return null;
     let splitItem = string.split(":");
-    if (splitItem.length==2) {
+    if (splitItem) {
         let prop = {
-            key: splitItem[0],
-            value: splitItem[1]
+            key: splitItem.shift(),
+            value: splitItem.join(" ")
         };
         if (prop.value[0]==`"` && prop.value[prop.value.length-1]==`"`) {
             prop.value = prop.value.replace(/"/g,``);
         } else if (!isNaN(prop.value)) {
             prop.value = Number(prop.value);
         }
+        return prop;
+    } else {
+        return {
+            key: 'unknown',
+            value: splitItem
+        }
+    }
+}
+
+let ParseMeterData = function(string=""){
+    if (string.trim()=="") return null;
+    let splitItem = string.split(":");
+    if (splitItem.length==3) {
+        let prop = {
+            key: splitItem.shift(),
+            value: {
+                LEFT: Number(splitItem.shift()),
+                RIGHT: Number(splitItem.shift())
+            }
+        };
         return prop;
     } else {
         return {
@@ -53,8 +73,6 @@ let DelimitSpace = function(string=""){
         charCount++;
     }
 
-    console.log(dataArray);
-
     return dataArray;
 }
 
@@ -91,6 +109,21 @@ let ParseDestination = function(data){
     return parsedData;
 }
 
+let ParseMeter = function(data){
+    if (!data || data.trim()=="") return null;
+    let array = DelimitSpace(data);
+    let parsedData = {
+        'VERB': array.shift(),
+        'TYPE': array.shift(),
+        'CHANNEL': array.shift()
+    };
+    for (let item of array) {
+        let prop = ParseMeterData(item);
+        parsedData[prop.key] = prop.value;
+    }
+    return parsedData;
+}
+
 let ParseGeneric = function(data){
     if (!data || data.trim()=="") return null;
     let array = DelimitSpace(data);
@@ -112,6 +145,9 @@ let Parse = function(data){
         case "DST":
             return ParseDestination(data);
             break;
+        case "MTR":
+            return ParseMeter(data);
+            break;
         case "VER":
         default:
             return ParseGeneric(data);
@@ -125,5 +161,6 @@ module.exports = {
     Verb,
     Parse,
     ParseSource,
-    ParseDestination
+    ParseDestination,
+    ParseMeter
 }

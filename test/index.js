@@ -11,7 +11,10 @@ let device = manager.addDevice({
 
 device
 .on("data",data=>{
-    console.log(data);
+    // console.log(device);
+})
+.on("running",data=>{
+    console.log("running");
 })
 .on("error",error=>{
     console.log(error);

@@ -1,6 +1,6 @@
 "use strict";
 
-class LwrpCommand{
+class PollCommand{
     constructor(data){
         this.poller = data.poller;
         this.command = data.command;
@@ -16,8 +16,8 @@ class LwrpCommand{
     call(){
         if (this.count && this.count>0) {
             this.count-=1;
-            this.checkValid();
         }
+        this.checkValid();
         return this.command;
     }
 
@@ -29,3 +29,5 @@ class LwrpCommand{
         return this.command;
     }
 }
+
+module.exports=PollCommand;

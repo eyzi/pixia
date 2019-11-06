@@ -27,27 +27,47 @@ class Lwrp extends EventEmitter{
         this.initSocket();
     }
 
+    run () {
+        this.poller = setInterval(_=>{
+            this.pollCommands.forEach(pc=>{
+                this.write(pc.call());
+                pc.checkValid();
+            });
+        },this.pollInterval);
+        this.running=true;
+        this.emit("running");
+    }
+
+    stop(){
+        clearInterval(this.poller);
+        this.running=false;
+    }
+
     initSocket(){
         if (this.host) {
             this.socket.connect(this.port,this.host,_=>{
-                this.running=true;
+                this.run();
                 this.emit("connected");
             });
         }
+    }
+
+    hasCommand(command){
+        return this.pollCommands.has(command);
     }
 
     removeCommand(command){
         this.pollCommands.delete(command);
     }
 
-    addCommand(data){
-        if (!data.command) return;
-        let pollCommand = new PollCommand({
-            ...data,
-            poller: this
-        })
-        this.pollCommands.set(data.command,pollCommand);
-        return pollCommand;
+    addCommand(command,count=null){
+        let pc = new PollCommand({
+            poller: this,
+            command: command,
+            count: count
+        });
+        this.pollCommands.set(pc.command,pc);
+        return pc;
     }
 
     write(message){

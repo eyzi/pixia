@@ -11,14 +11,21 @@ class Destination extends AudioStream{
             channel:data.CHANNEL,
             name:data.NAME,
             address:data.ADDR,
-            chCount:data.NCHN
+            chCount:data.NCHN,
+            streamType:'DST'
         });
+        console.log(this);
+        this.source = null;
     }
 
-    update(data){
+    async update(data){
+        let ipRegex = /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i;
+        let addrMatch = data.ADDR.match(ipRegex);
         this.raw = data;
         this.name = data.NAME;
-        this.address = data.ADDR;
+        this.address = addrMatch
+            ? await this.manager.findSource(addrMatch[0])
+            : data.ADDR;
     }
 }
 
