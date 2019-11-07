@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-		"test": "node test/index.js"
+    "test": "node test/index.js"
   },
   "repository": {
     "type": "git",
@@ -16,5 +16,13 @@
   "bugs": {
     "url": "https://github.com/eyzi/pixia/issues"
   },
-  "homepage": "https://github.com/eyzi/pixia#readme"
+  "homepage": "https://github.com/eyzi/pixia#readme",
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [
+    "axia",
+    "lwrp",
+    "wrapper"
+  ]
 }
