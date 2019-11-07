@@ -13,6 +13,12 @@ manager
 .on("destination",data=>{
     console.log(data.source);
 })
+.on("source",data=>{
+    console.log(data.subscribers);
+})
+.on("meter",data=>{
+    // console.log(data);
+})
 .on("error",error=>{
     console.error(error);
 });

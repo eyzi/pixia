@@ -43,6 +43,9 @@ class AudioStream{
 
     getMeter(){
         return {
+            host: this.device.host,
+            type: this.streamType,
+            channel: this.channel,
             left: this.channels.get('LEFT'),
             right: this.channels.get('RIGHT'),
         };
