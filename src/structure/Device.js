@@ -199,6 +199,13 @@ class Device extends EventEmitter{
     write(message){
         this.lwrp.write(message);
     }
+
+    stop(){
+        if (this.lwrp) {
+            this.lwrp.stop();
+            this.lwrp.socket = null;
+        }
+    }
 }
 
 module.exports=Device;

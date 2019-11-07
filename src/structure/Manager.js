@@ -54,6 +54,14 @@ class Manager extends EventEmitter{
         return device;
     }
 
+    removeDevice(host){
+        let device = this.devices.get(host);
+        if (device) {
+            device.stop();
+            this.devices.delete(host);
+        }
+    }
+
     async findSource(address){
         let src = this.sources.get(address);
         if (src) return src;

@@ -43,6 +43,8 @@ class AudioStream{
 
     getMeter(){
         return {
+            device: this.device,
+            manager: this.manager,
             host: this.device.host,
             type: this.streamType,
             channel: this.channel,

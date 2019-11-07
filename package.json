@@ -1,7 +1,7 @@
 {
   "name": "pixia",
   "version": "1.0.0",
-  "description": "Pippintech Axia Library",
+  "description": "Axia Lwrp Wrapper Library",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
