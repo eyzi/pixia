@@ -6,7 +6,7 @@ let manager = new Pixia();
 
 let device = manager.addDevice({
     name: "XNode",
-    host: "172.16.0.5"
+    host: "172.16.0.11"
 });
 
 let station = manager.addStation({
@@ -15,10 +15,10 @@ let station = manager.addStation({
 
 manager
 .on("destination",data=>{
-    console.log(data.source);
+    // console.log(data.sources);
 })
 .on("source",data=>{
-    console.log(data.subscribers);
+    console.log(data);
 })
 .on("meter",data=>{
     // console.log(data);

@@ -22,7 +22,7 @@ class Manager extends EventEmitter{
         });
         this.devices.set(data.host,device);
         device.on("ready",_=>{
-            console.log(`${device.name} is ready`)
+            console.log(`${device.name} is ready`);
             device.getSources();
             device.getDestinations();
             device.getGpis();
@@ -116,6 +116,14 @@ class Manager extends EventEmitter{
 
     async handleMeter(meter){
         this.emit('meter',meter);
+    }
+
+    fromJson(data){
+        // config by data
+    }
+
+    toJson(){
+        // used for saving to db
     }
 }
 
