@@ -2,12 +2,14 @@
 
 const {EventEmitter} = require("events");
 const Device = require("./Device");
+const Station = require("./Station");
 
 class Manager extends EventEmitter{
     constructor(){
         super();
 
         this.devices = new Map();
+        this.stations = new Map();
         this.sources = new Map();
     }
 
@@ -60,6 +62,18 @@ class Manager extends EventEmitter{
             device.stop();
             this.devices.delete(host);
         }
+    }
+
+    addStation(data){
+        let station = new Station(data);
+        if (station) {
+            this.stations.set(station.name,station);
+        }
+        return station;
+    }
+
+    removeStation(name){
+        this.stations.delete(name);
     }
 
     async findSource(address){
