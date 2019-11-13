@@ -4,38 +4,31 @@ const AudioStream = require("./AudioStream");
 
 class Source extends AudioStream{
     constructor(data){
-        super({
-            raw:data,
-            device:data.device,
-            manager:data.manager,
-            channel:data.CHANNEL,
-            name:data.PSNM,
-            address:data.RTPA,
-            chCount:data.NCHN,
-            streamType:'SRC'
-        });
-
+        data.streamType = "SRC";
+        super(data);
         this.subscribers = new Map();
     }
 
-    removeSub(dst){
-        let dstKey = `${dst.device.host}/${dst.channel}`;
-        this.subscribers.delete(dstKey);
-        dst.source = null;
-        console.log(this.subscribers);
-    }
+    update(data){
+        let changed = false;
 
-    addSub(dst){
-        let dstKey = `${dst.device.host}/${dst.channel}`;
-        this.subscribers.set(dstKey,dst);
-        dst.source = this;
-    }
+        if (this.name!=data.NAME) {
+            this.name = data.NAME;
+            changed = true;
+        }
 
-    async update(data){
-        this.raw = data;
-        this.name = data.PSNM;
-        this.address = data.RTPA;
+        if (this.address!=data.RTPA) {
+            this.address = data.RTPA;
+            changed = true;
+        }
+
+        if (changed) {
+            this.emit("change",this);
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 
-module.exports=Source;
+module.exports = Source;

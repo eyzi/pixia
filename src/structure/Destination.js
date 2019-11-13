@@ -1,51 +1,34 @@
 "use strict";
 
 const AudioStream = require("./AudioStream");
-const Source = require("./Source");
 
 class Destination extends AudioStream{
     constructor(data){
-        super({
-            raw:data,
-            device:data.device,
-            manager:data.manager,
-            channel:data.CHANNEL,
-            name:data.NAME,
-            address:data.ADDR,
-            chCount:data.NCHN,
-            streamType:'DST'
-        });
+        data.streamType = "SRC";
+        super(data);
+        this.source = null;
     }
 
-    subscribe(src){
-        if (!(src instanceof Source)) return;
-        if (this.source instanceof Source) {
-            this.source.removeSub(this);
+    update(data){
+        let changed = false;
+
+        if (this.name!=data.NAME) {
+            this.name = data.NAME;
+            changed = true;
         }
-        src.addSub(this);
-    }
 
-    async fixSource(){
-        if (this.address) {
-            let src = await this.manager.findSource(this.address)
-            if (src) {
-                this.subscribe(src);
-            } else {
-                this.source = this.address;
-            }
+        if (this.address!=data.ADDR) {
+            this.address = data.ADDR;
+            changed = true;
+        }
+
+        if (changed) {
+            this.emit("change",this);
+            return true;
         } else {
-            this.source = null;
+            return false;
         }
-    }
-
-    async update(data){
-        let ipRegex = /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i;
-        let addrMatch = data.ADDR.match(ipRegex);
-        this.raw = data;
-        this.name = data.NAME;
-        this.address = addrMatch ? addrMatch[0] : null;
-        this.fixSource();
     }
 }
 
-module.exports=Destination;
+module.exports = Destination;
