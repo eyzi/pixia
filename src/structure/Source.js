@@ -10,6 +10,8 @@ class Source extends AudioStream{
     }
 
     update(data){
+        super.update(data);
+
         let changed = false;
 
         if (this.name!=data.NAME) {
@@ -28,6 +30,22 @@ class Source extends AudioStream{
         } else {
             return false;
         }
+    }
+
+    subscribe(dst){
+        this.subscribers.set(dst.toString(),dst);
+        this.emit("subscribe",{
+            src: this,
+            dst: dst
+        });
+    }
+
+    unsubscribe(dst){
+        this.subscribers.delete(dst.toString());
+        this.emit("unsubscribe",{
+            src: this,
+            dst: dst
+        });
     }
 }
 

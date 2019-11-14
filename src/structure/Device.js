@@ -1,6 +1,10 @@
 "use strict";
 
+const Gpi = require("./Gpi");
+const Gpo = require("./Gpo");
+const Source = require("./Source");
 const {EventEmitter} = require("events");
+const Destination = require("./Destination");
 const LwrpSocket = require("../util/LwrpSocket");
 
 class Device extends EventEmitter{
@@ -57,6 +61,42 @@ class Device extends EventEmitter{
         if (this.gpoCount>0) this.write("ADD GPO");
     }
 
+    createSource(AudioStreamData){
+        let src = new Source(AudioStreamData);
+        src.on("change",_=>{
+            this.emit("source",src);
+        });
+        this.sources.set(src.toString(),src);
+        return src;
+    }
+
+    createDestination(AudioStreamData){
+        let dst = new Destination(AudioStreamData);
+        dst.on("change",_=>{
+            this.emit("destination",dst);
+        });
+        this.destinations.set(dst.toString(),dst);
+        return dst;
+    }
+
+    createGpi(GpioData){
+        let gpi = new Gpi(GpioData);
+        gpi.on("change",_=>{
+            this.emit("gpi",gpi);
+        });
+        this.gpis.set(gpi.toString(),gpi);
+        return gpi;
+    }
+
+    createGpo(GpioData){
+        let gpo = new Gpo(GpioData);
+        gpo.on("change",_=>{
+            this.emit("gpo",gpo);
+        });
+        this.gpos.set(gpo.toString(),gpo);
+        return gpo;
+    }
+
     async handleData(data){
         switch (data.VERB) {
             case "VER":
@@ -73,13 +113,10 @@ class Device extends EventEmitter{
             case "SRC":
                 let src = this.sources.get(data.CHANNEL);
                 if (!src) {
-                    src = new Source({
+                    src = this.createSource({
                         manager: this.manager,
                         device: this,
                         channel: data.CHANNEL
-                    });
-                    src.on("change",_=>{
-                        this.emit("source",src);
                     });
                 }
                 src.update(data);
@@ -87,18 +124,35 @@ class Device extends EventEmitter{
             case "DST":
                 let dst = this.destinations.get(data.CHANNEL);
                 if (!dst) {
-                    dst = new Destination({
+                    dst = this.createDestination({
                         manager: this.manager,
                         device: this,
                         channel: data.CHANNEL
-                    });
-                    dst.on("change",_=>{
-                        this.emit("destination",dst);
                     });
                 }
                 dst.update(data);
                 break;
             case "GPI":
+                let gpi = this.gpis.get(data.CHANNEL);
+                if (!gpi) {
+                    gpi = this.createGpi({
+                        manager: this.manager,
+                        device: this,
+                        channel: data.CHANNEL
+                    });
+                }
+                gpi.update(data);
+                break;
+            case "GPO":
+                let gpo = this.gpos.get(data.CHANNEL);
+                if (!gpo) {
+                    gpo = this.createGpo({
+                        manager: this.manager,
+                        device: this,
+                        channel: data.CHANNEL
+                    });
+                }
+                gpo.update(data);
                 break;
         }
     }

@@ -15,6 +15,8 @@ class LwrpSocket extends EventEmitter{
         this.reconnect = LwrpData.reconnect || 5000;
         this.pollInterval = LwrpData.pollInterval || 200;
 
+        this.pollCommands = new Map();
+
         this.socket = Socket();
         this.socket
             .on("connect",_=>this.socketConnect())
@@ -146,6 +148,12 @@ class LwrpSocket extends EventEmitter{
             case "SRC": case "DST":
             case "GPI": case "GPO":
                 parsed.CHANNEL = dataArray.shift();
+                break;
+        }
+
+        switch (parsed.VERB) {
+            case "GPI": case "GPO":
+                parsed.VALUE = dataArray.shift();
                 break;
         }
 
