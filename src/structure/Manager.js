@@ -50,6 +50,7 @@ class Manager extends EventEmitter{
                     this.emit("gpis",this.gpis);
                 })
                 .on("gpo",gpo=>{
+                    console.log(gpo);
                     this.gpos.set(gpo.toString(),gpo);
                     //this.handleGpo(gpo);
                     this.emit("gpos",this.gpos);

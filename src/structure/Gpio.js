@@ -41,6 +41,7 @@ class Gpio extends EventEmitter{
             });
 
         this.pins.set(pin.id,pin);
+        pin.update(PinData.value);
         return pin;
     }
 

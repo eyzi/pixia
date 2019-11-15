@@ -8,7 +8,6 @@ class GpioPin extends EventEmitter{
 
         this.gpio = data.gpio;
         this.id = data.id;
-        this.value = data.value;
     }
 
     update(value){

@@ -81,8 +81,8 @@ class Device extends EventEmitter{
 
     createGpi(GpioData){
         let gpi = new Gpi(GpioData);
-        gpi.on("change",_=>{
-            this.emit("gpi",gpi);
+        gpi.on("change",GpioInfo=>{
+            this.emit("gpi",GpioInfo);
         });
         this.gpis.set(gpi.toString(),gpi);
         return gpi;
@@ -90,8 +90,8 @@ class Device extends EventEmitter{
 
     createGpo(GpioData){
         let gpo = new Gpo(GpioData);
-        gpo.on("change",_=>{
-            this.emit("gpo",gpo);
+        gpo.on("change",GpioInfo=>{
+            this.emit("gpo",GpioInfo);
         });
         this.gpos.set(gpo.toString(),gpo);
         return gpo;
