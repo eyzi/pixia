@@ -1,6 +1,7 @@
 "use strict";
 
 const Device = require("./Device");
+const Station = require("./Station");
 const {EventEmitter} = require("events");
 const LwrpDiscovery = require("../util/LwrpDiscovery");
 
@@ -36,7 +37,7 @@ class Manager extends EventEmitter{
                 })
                 .on("source",src=>{
                     this.sources.set(src.toString(),src);
-                    //this.handleSrc(src);
+                    this.handleSrc(src);
                     this.emit("sources",this.sources);
                 })
                 .on("destination",dst=>{
@@ -44,18 +45,65 @@ class Manager extends EventEmitter{
                     this.handleDst(dst);
                     this.emit("destinations",this.destinations);
                 })
-                .on("gpi",gpi=>{
-                    this.gpis.set(gpi.toString(),gpi);
-                    //this.handleGpi(gpi);
+                .on("gpi",data=>{
+                    this.gpis.set(data.gpio.toString(),data.gpio);
+                    this.handleGpi(data.gpio);
                     this.emit("gpis",this.gpis);
                 })
-                .on("gpo",gpo=>{
-                    console.log(gpo);
-                    this.gpos.set(gpo.toString(),gpo);
-                    //this.handleGpo(gpo);
+                .on("gpo",data=>{
+                    this.gpos.set(data.gpio.toString(),data.gpio);
+                    this.handleGpo(data.gpio);
                     this.emit("gpos",this.gpos);
                 });
         });
+    }
+
+    addStation(StationData){
+        StationData.manager = this;
+
+        if (StationData.sources) {
+            StationData.sources.forEach((rtpa,i)=>{
+                let src = this.sources.get(rtpa);
+                if (src) {
+                    StationData.sources.splice(i,1,src);
+                }
+            });
+        }
+
+        if (StationData.destinations) {
+            StationData.destinations.forEach((addr,i)=>{
+                let dst = this.destinations.get(addr);
+                console.log(dst);
+                if (dst) {
+                    StationData.destinations.splice(i,1,dst);
+                }
+            });
+        }
+
+        if (StationData.gpis) {
+            StationData.gpis.forEach((id,i)=>{
+                let gpi = this.gpis.get(id);
+                if (gpi) {
+                    StationData.gpis.splice(i,1,gpi);
+                }
+            });
+        }
+
+        if (StationData.gpos) {
+            StationData.gpos.forEach((id,i)=>{
+                let gpo = this.gpos.get(id);
+                if (gpo) {
+                    StationData.gpos.splice(i,1,gpo);
+                }
+            });
+        }
+
+        let stn = new Station(StationData);
+        if (stn) {
+            this.stations.set(stn.name,stn);
+        }
+
+        return stn;
     }
 
     getSource(rtpa){
@@ -75,6 +123,31 @@ class Manager extends EventEmitter{
                 dst.setSource(src);
             }
         }
+        this.stations.forEach(stn=>{
+            let foundDst = stn.destinations.get(dst.toString());
+            if (typeof foundDst==="string") stn.addDestination(dst);
+        });
+    }
+
+    handleSrc(src) {
+        this.stations.forEach(stn=>{
+            let foundSrc = stn.sources.get(src.toString());
+            if (typeof foundSrc==="string") stn.addSource(src);
+        });
+    }
+
+    handleGpi(gpi) {
+        this.stations.forEach(stn=>{
+            let foundGpi = stn.gpis.get(gpi.toString());
+            if (typeof foundGpi==="string") stn.addGpi(gpi);
+        });
+    }
+
+    handleGpo(gpo) {
+        this.stations.forEach(stn=>{
+            let foundGpo = stn.gpos.get(gpo.toString());
+            if (typeof foundGpo==="string") stn.addGpo(gpo);
+        });
     }
 
     addAddress(address){

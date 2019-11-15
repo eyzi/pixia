@@ -26,14 +26,12 @@ class Gpio extends EventEmitter{
                 })
             })
             .on("low",_=>{
-                console.log(`${this} is low`);
                 this.emit("low",{
                     gpio: this,
                     pin: pin
                 })
             })
             .on("high",_=>{
-                console.log(`${this} is high`);
                 this.emit("high",{
                     gpio: this,
                     pin: pin

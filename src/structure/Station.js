@@ -9,7 +9,7 @@ const Destination = require("./Destination");
 class Station extends EventEmitter{
     constructor(data){
         super();
-        
+
         this.manager = data.manager;
         this.name = data.name || "Unnamed Station";
 
@@ -17,13 +17,41 @@ class Station extends EventEmitter{
         this.destinations = new Map();
         this.gpis = new Map();
         this.gpos = new Map();
+
+        if (data.sources && data.sources.length>0) {
+            for (let src of data.sources) {
+                this.addSource(src);
+            }
+        }
+
+        if (data.destinations && data.destinations.length>0) {
+            for (let dst of data.destinations) {
+                this.addDestination(dst);
+            }
+        }
+
+        if (data.gpis && data.gpis.length>0) {
+            for (let gpi of data.gpis) {
+                this.addGpi(gpi);
+            }
+        }
+
+        if (data.gpos && data.gpos.length>0) {
+            for (let gpo of data.gpos) {
+                this.addGpo(gpo);
+            }
+        }
     }
 
     addSource(src){
-        src.on("change",_=>{
-            this.emit("source",src);
-        });
-        this.sources.set(src.toString(),src);
+        if (src instanceof Source) {
+            src.on("change",_=>{
+                this.emit("source",src);
+            });
+            this.sources.set(src.toString(),src);
+        } else {
+            this.sources.set(src,src);
+        }
     }
 
     removeSource(resolveSrc){
@@ -45,10 +73,14 @@ class Station extends EventEmitter{
 
 
     addDestination(dst){
-        dst.on("change",_=>{
-            this.emit("destination",dst);
-        });
-        this.destinations.set(dst.toString(),dst);
+        if (dst instanceof Destination) {
+            dst.on("change",_=>{
+                this.emit("destination",dst);
+            });
+            this.destinations.set(dst.toString(),dst);
+        } else {
+            this.destinations.set(dst,dst);
+        }
     }
 
     removeDestination(resolveDst){
@@ -69,10 +101,14 @@ class Station extends EventEmitter{
 
 
     addGpi(gpi){
-        gpi.on("change",GpioInfo=>{
-            this.emit("gpi",GpioInfo);
-        });
-        this.gpis.set(gpi.toString(),gpi);
+        if (gpi instanceof Gpi) {
+            gpi.on("change",GpioInfo=>{
+                this.emit("gpi",GpioInfo);
+            });
+            this.gpis.set(gpi.toString(),gpi);
+        } else {
+            this.gpis.set(gpi,gpi);
+        }
     }
 
     removeGpi(resolveGpi){
@@ -93,10 +129,14 @@ class Station extends EventEmitter{
 
 
     addGpo(gpo){
-        gpo.on("change",GpioInfo=>{
-            this.emit("gpo",GpioInfo);
-        });
-        this.gpos.set(gpo.toString(),gpo);
+        if (gpo instanceof Gpo) {
+            gpo.on("change",GpioInfo=>{
+                this.emit("gpo",GpioInfo);
+            });
+            this.gpos.set(gpo.toString(),gpo);
+        } else {
+            this.gpos.set(gpo,gpo);
+        }
     }
 
     removeGpo(resolveGpo){
@@ -115,3 +155,5 @@ class Station extends EventEmitter{
         return true;
     }
 }
+
+module.exports = Station;
