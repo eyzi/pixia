@@ -42,6 +42,30 @@ class AudioStream extends EventEmitter{
         if (this.channels.size==0) this.initChannels();
     }
 
+    setMeter(data){
+        if (!data.PEEK) return;
+
+        let sides = data.PEEK.split(":");
+        switch(sides.length){
+            case 2:
+                let leftCh = this.channels.get('left');
+                if (!leftCh) return;
+                leftCh.peek = Number(sides[0]);
+
+                let rightCh = this.channels.get('right');
+                if (!rightCh) return;
+                rightCh.peek = Number(sides[0]);
+
+                this.emit("meter",{
+                    left: leftCh.peek,
+                    right: rightCh.peek
+                });
+                break;
+            default:
+                break;
+        }
+    }
+
     toString(){
         return `${this.device.host}/${this.channel}`;
     }

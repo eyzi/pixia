@@ -31,14 +31,32 @@ console.log(s1);
 
 s1
 .on("source",data=>{
-    //console.log('on src event');
+    console.log('src');
 })
 .on("destination",data=>{
-    console.log('on dst event');
+    console.log('dst');
 })
 .on("gpi",data=>{
-    //console.log('on gpi event',data.gpio.toString());
+    console.log('gpi');
 })
 .on("gpo",data=>{
-    //console.log('on gpo event',data.gpio.toString());
+    console.log('gpo');
+})
+.on("subscribe",data=>{
+    console.log('subscribe');
+})
+.on("unsubscribe",data=>{
+    console.log('unsubscribe');
+})
+.on("meter",data=>{
+    console.log(data);
+})
+
+// TODO
+
+.on("audio",data=>{
+    console.log('audio');
+})
+.on("silence",data=>{
+    console.log('silence');
 });

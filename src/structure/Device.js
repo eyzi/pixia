@@ -59,6 +59,7 @@ class Device extends EventEmitter{
         if (this.dstCount>0) this.write("DST");
         if (this.gpiCount>0) this.write("ADD GPI");
         if (this.gpoCount>0) this.write("ADD GPO");
+        this.lwrp.addCommand("MTR");
     }
 
     createSource(AudioStreamData){
@@ -111,7 +112,7 @@ class Device extends EventEmitter{
             case "ERROR":
                 break;
             case "SRC":
-                let src = this.sources.get(data.CHANNEL);
+                let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
                 if (!src) {
                     src = this.createSource({
                         manager: this.manager,
@@ -122,7 +123,7 @@ class Device extends EventEmitter{
                 src.update(data);
                 break;
             case "DST":
-                let dst = this.destinations.get(data.CHANNEL);
+                let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
                 if (!dst) {
                     dst = this.createDestination({
                         manager: this.manager,
@@ -133,7 +134,7 @@ class Device extends EventEmitter{
                 dst.update(data);
                 break;
             case "GPI":
-                let gpi = this.gpis.get(data.CHANNEL);
+                let gpi = this.gpis.get(`${this.host}/${data.CHANNEL}`);
                 if (!gpi) {
                     gpi = this.createGpi({
                         manager: this.manager,
@@ -144,7 +145,7 @@ class Device extends EventEmitter{
                 gpi.update(data);
                 break;
             case "GPO":
-                let gpo = this.gpos.get(data.CHANNEL);
+                let gpo = this.gpos.get(`${this.host}/${data.CHANNEL}`);
                 if (!gpo) {
                     gpo = this.createGpo({
                         manager: this.manager,
@@ -153,6 +154,15 @@ class Device extends EventEmitter{
                     });
                 }
                 gpo.update(data);
+                break;
+            case "MTR":
+                if (data.TYPE==="ICH") {
+                    let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
+                    if (src) src.setMeter(data);
+                } else if (data.TYPE==="OCH") {
+                    let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
+                    if (dst) dst.setMeter(data);
+                }
                 break;
         }
     }

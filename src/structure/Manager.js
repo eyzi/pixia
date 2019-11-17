@@ -73,7 +73,6 @@ class Manager extends EventEmitter{
         if (StationData.destinations) {
             StationData.destinations.forEach((addr,i)=>{
                 let dst = this.destinations.get(addr);
-                console.log(dst);
                 if (dst) {
                     StationData.destinations.splice(i,1,dst);
                 }

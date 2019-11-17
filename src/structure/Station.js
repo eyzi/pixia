@@ -5,6 +5,7 @@ const Gpo = require("./Gpo");
 const Source = require("./Source");
 const {EventEmitter} = require("events");
 const Destination = require("./Destination");
+const StationIO = require("./StationIO");
 
 class Station extends EventEmitter{
     constructor(data){
@@ -48,7 +49,16 @@ class Station extends EventEmitter{
             src.on("change",_=>{
                 this.emit("source",src);
             });
-            this.sources.set(src.toString(),src);
+            src.on("meter",MeterData=>{
+                this.emit("meter",{
+                    stream: src,
+                    meter: MeterData
+                });
+            });
+            this.sources.set(src.toString(),new StationIO({
+                label: 'source',
+                data: src
+            }));
         } else {
             this.sources.set(src,src);
         }
@@ -77,7 +87,16 @@ class Station extends EventEmitter{
             dst.on("change",_=>{
                 this.emit("destination",dst);
             });
-            this.destinations.set(dst.toString(),dst);
+            dst.on("meter",MeterData=>{
+                this.emit("meter",{
+                    stream: dst,
+                    meter: MeterData
+                });
+            });
+            this.destinations.set(dst.toString(),new StationIO({
+                label: 'destination',
+                data: dst
+            }));
         } else {
             this.destinations.set(dst,dst);
         }
@@ -105,7 +124,10 @@ class Station extends EventEmitter{
             gpi.on("change",GpioInfo=>{
                 this.emit("gpi",GpioInfo);
             });
-            this.gpis.set(gpi.toString(),gpi);
+            this.gpis.set(gpi.toString(),new StationIO({
+                label: 'gpi',
+                data: gpi
+            }));
         } else {
             this.gpis.set(gpi,gpi);
         }
@@ -133,7 +155,10 @@ class Station extends EventEmitter{
             gpo.on("change",GpioInfo=>{
                 this.emit("gpo",GpioInfo);
             });
-            this.gpos.set(gpo.toString(),gpo);
+            this.gpos.set(gpo.toString(),new StationIO({
+                label: 'gpo',
+                data: gpo
+            }));
         } else {
             this.gpos.set(gpo,gpo);
         }
