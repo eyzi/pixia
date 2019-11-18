@@ -20,14 +20,14 @@ class Station extends EventEmitter{
         this.gpos = new Map();
 
         if (data.sources && data.sources.length>0) {
-            for (let src of data.sources) {
-                this.addSource(src);
+            for (let data of data.sources) {
+                this.addSource(data.data,data.label);
             }
         }
 
         if (data.destinations && data.destinations.length>0) {
-            for (let dst of data.destinations) {
-                this.addDestination(dst);
+            for (let data of data.destinations) {
+                this.addDestination(data.data,data.label);
             }
         }
 
@@ -44,10 +44,25 @@ class Station extends EventEmitter{
         }
     }
 
-    addSource(src){
+    addSource(src,label=[]){
+        let key = (src instanceof Source) ? src.toString() : src;
+        this.sources.set(key,new StationIO({
+            label: label,
+            data: src
+        }));
+
         if (src instanceof Source) {
             src.on("change",_=>{
                 this.emit("source",src);
+            });
+            src.on("change",_=>{
+                this.emit("source",src);
+            });
+            src.on("subscribe",data=>{
+                this.emit("subscribe",data);
+            });
+            src.on("unsubscribe",data=>{
+                this.emit("unsubscribe",data);
             });
             src.on("meter",MeterData=>{
                 this.emit("meter",{
@@ -55,12 +70,6 @@ class Station extends EventEmitter{
                     meter: MeterData
                 });
             });
-            this.sources.set(src.toString(),new StationIO({
-                label: 'source',
-                data: src
-            }));
-        } else {
-            this.sources.set(src,src);
         }
     }
 

@@ -1,6 +1,7 @@
 "use strict";
 
 const Pixia = require("..");
+const Gpio = require("../src/structure/Gpio");
 
 let manager = new Pixia();
 manager.addAddress("172.16.0.5");
@@ -8,22 +9,52 @@ manager.addAddress("172.16.0.11");
 let s1 = manager.addStation({
     name:"Test Station",
     sources:[
-        "172.16.0.5/1",
-        "172.16.0.5/2",
-        "172.16.0.5/3",
-        "172.16.0.5/4"
+        {
+            data: "172.16.0.5/1",
+            labels: ["live"]
+        },
+        {
+            data: "172.16.0.5/2",
+            labels: []
+        },
+        {
+            data: "172.16.0.5/3",
+            labels: []
+        },
+        {
+            data: "172.16.0.5/4",
+            labels: []
+        }
     ],
     destinations:[
-        "172.16.0.5/1",
-        "172.16.0.5/2",
-        "172.16.0.5/3",
-        "172.16.0.5/4"
+        {
+            data: "172.16.0.5/1",
+            labels: ["live"]
+        },
+        {
+            data: "172.16.0.5/2",
+            labels: []
+        },
+        {
+            data: "172.16.0.5/3",
+            labels: []
+        },
+        {
+            data: "172.16.0.5/4",
+            labels: []
+        }
     ],
     gpis:[
-        "172.16.0.11/1"
+        {
+            data: "172.16.0.11/1",
+            labels: []
+        }
     ],
     gpos:[
-        "172.16.0.11/1"
+        {
+            data: "172.16.0.11/1",
+            labels: []
+        }
     ]
 });
 
@@ -34,7 +65,7 @@ s1
     console.log('src');
 })
 .on("destination",data=>{
-    console.log('dst');
+    console.log(data.toString());
 })
 .on("gpi",data=>{
     console.log('gpi');
@@ -49,7 +80,7 @@ s1
     console.log('unsubscribe');
 })
 .on("meter",data=>{
-    console.log(data);
+    //console.log(data);
 })
 
 // TODO

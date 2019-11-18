@@ -61,42 +61,6 @@ class Manager extends EventEmitter{
     addStation(StationData){
         StationData.manager = this;
 
-        if (StationData.sources) {
-            StationData.sources.forEach((rtpa,i)=>{
-                let src = this.sources.get(rtpa);
-                if (src) {
-                    StationData.sources.splice(i,1,src);
-                }
-            });
-        }
-
-        if (StationData.destinations) {
-            StationData.destinations.forEach((addr,i)=>{
-                let dst = this.destinations.get(addr);
-                if (dst) {
-                    StationData.destinations.splice(i,1,dst);
-                }
-            });
-        }
-
-        if (StationData.gpis) {
-            StationData.gpis.forEach((id,i)=>{
-                let gpi = this.gpis.get(id);
-                if (gpi) {
-                    StationData.gpis.splice(i,1,gpi);
-                }
-            });
-        }
-
-        if (StationData.gpos) {
-            StationData.gpos.forEach((id,i)=>{
-                let gpo = this.gpos.get(id);
-                if (gpo) {
-                    StationData.gpos.splice(i,1,gpo);
-                }
-            });
-        }
-
         let stn = new Station(StationData);
         if (stn) {
             this.stations.set(stn.name,stn);
@@ -117,7 +81,7 @@ class Manager extends EventEmitter{
 
     handleDst(dst) {
         if (!dst.source || (dst.address && dst.address!=='' && dst.address==dst.source.address)) {
-            let src = this.getSource();
+            let src = this.getSource(dst.address);
             if (src) {
                 dst.setSource(src);
             }

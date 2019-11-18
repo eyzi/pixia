@@ -22,11 +22,16 @@ class Destination extends AudioStream{
 
         if (data.ADDR) {
             let parsedAddr = data.ADDR.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i);
-            if (parsedAddr && this.address!=parsedAddr[0]) {
-                this.address = parsedAddr[0];
+            if (!parsedAddr && this.source) {
+                this.source = null;
                 changed = true;
-            } else {
-                this.address = '';
+            } else if (parsedAddr) {
+                if (!this.source) {
+                    changed = true;
+                } else if (this.source.address==parsedAddr[0]) {
+                    this.source = null;
+                    changed = true;
+                }
             }
         }
 
