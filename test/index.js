@@ -4,8 +4,10 @@ const Pixia = require("..");
 const Gpio = require("../src/structure/Gpio");
 
 let manager = new Pixia();
+
 manager.addAddress("172.16.0.5");
 manager.addAddress("172.16.0.11");
+
 let s1 = manager.addStation({
     name:"Test Station",
     sources:[
@@ -58,7 +60,12 @@ let s1 = manager.addStation({
     ]
 });
 
-console.log(s1);
+manager.on("subscribe",_=>{
+    console.log("src sub");
+});
+
+let a = "test";
+let b = "test";
 
 s1
 .on("source",data=>{

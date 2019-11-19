@@ -67,6 +67,12 @@ class Device extends EventEmitter{
         src.on("change",_=>{
             this.emit("source",src);
         });
+        src.on("subscribe",data=>{
+            this.emit("subscribe",data);
+        });
+        src.on("unsubscribe",data=>{
+            this.emit("unsubscribe",data);
+        });
         this.sources.set(src.toString(),src);
         return src;
     }

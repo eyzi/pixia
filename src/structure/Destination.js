@@ -22,16 +22,11 @@ class Destination extends AudioStream{
 
         if (data.ADDR) {
             let parsedAddr = data.ADDR.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i);
-            if (!parsedAddr && this.source) {
-                this.source = null;
+            this.address = (parsedAddr) ? parsedAddr[0] : null;
+            if (!this.source ^ !this.address) {
                 changed = true;
-            } else if (parsedAddr) {
-                if (!this.source) {
-                    changed = true;
-                } else if (this.source.address==parsedAddr[0]) {
-                    this.source = null;
-                    changed = true;
-                }
+            } else if (this.source & this.address) {
+                change = this.source.address===this.address;
             }
         }
 
@@ -43,8 +38,8 @@ class Destination extends AudioStream{
         }
     }
 
-    setSource(src){
-        if (this.source instanceof Source) {
+    setSource(src=null){
+        if (this.source) {
             this.source.unsubscribe(this);
         }
         this.source = null;

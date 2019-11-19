@@ -19,29 +19,29 @@ class Station extends EventEmitter{
         this.gpis = new Map();
         this.gpos = new Map();
 
-        if (data.sources && data.sources.length>0) {
-            for (let data of data.sources) {
-                this.addSource(data.data,data.label);
-            }
-        }
-
-        if (data.destinations && data.destinations.length>0) {
-            for (let data of data.destinations) {
-                this.addDestination(data.data,data.label);
-            }
-        }
-
-        if (data.gpis && data.gpis.length>0) {
-            for (let gpi of data.gpis) {
-                this.addGpi(gpi);
-            }
-        }
-
-        if (data.gpos && data.gpos.length>0) {
-            for (let gpo of data.gpos) {
-                this.addGpo(gpo);
-            }
-        }
+        // if (data.sources && data.sources.length>0) {
+        //     for (let data of data.sources) {
+        //         this.addSource(data.data,data.label);
+        //     }
+        // }
+        //
+        // if (data.destinations && data.destinations.length>0) {
+        //     for (let data of data.destinations) {
+        //         this.addDestination(data.data,data.label);
+        //     }
+        // }
+        //
+        // if (data.gpis && data.gpis.length>0) {
+        //     for (let gpi of data.gpis) {
+        //         this.addGpi(gpi);
+        //     }
+        // }
+        //
+        // if (data.gpos && data.gpos.length>0) {
+        //     for (let gpo of data.gpos) {
+        //         this.addGpo(gpo);
+        //     }
+        // }
     }
 
     addSource(src,label=[]){
@@ -52,9 +52,6 @@ class Station extends EventEmitter{
         }));
 
         if (src instanceof Source) {
-            src.on("change",_=>{
-                this.emit("source",src);
-            });
             src.on("change",_=>{
                 this.emit("source",src);
             });
@@ -74,24 +71,24 @@ class Station extends EventEmitter{
     }
 
     removeSource(resolveSrc){
-        let src;
-
-        if (resolveSrc instanceof Source) {
-            src = this.sources.get(resolveSrc.toString());
-        } else if (typeof resolveSrc==='string') {
-            src = this.sources.get(resolveSrc);
-        }
-
+        let key = (resolveSrc instanceof Source) ? resolveSrc.toString() : resolveSrc;
+        let src = this.sources.get(key);
         if (!src) return false;
 
-        src.removeAllListeners();
-        this.sources.delete(src.toString());
+        if (src instanceof Source) src.removeAllListeners();
+        this.sources.delete(key);
         return true;
     }
 
 
 
     addDestination(dst){
+        let key = (dst instanceof Destination) ? dst.toString() : dst;
+        this.destinations.set(key,new StationIO({
+            label: label,
+            data: src
+        }));
+
         if (dst instanceof Destination) {
             dst.on("change",_=>{
                 this.emit("destination",dst);
@@ -102,28 +99,16 @@ class Station extends EventEmitter{
                     meter: MeterData
                 });
             });
-            this.destinations.set(dst.toString(),new StationIO({
-                label: 'destination',
-                data: dst
-            }));
-        } else {
-            this.destinations.set(dst,dst);
         }
     }
 
     removeDestination(resolveDst){
-        let dst;
-
-        if (resolveDst instanceof Destination) {
-            dst = this.destinations.get(resolveDst.toString());
-        } else if (typeof resolveDst==='string') {
-            dst = this.destinations.get(resolveDst);
-        }
-
+        let key = (resolveDst instanceof Destination) ? resolveDst.toString() : resolveDst;
+        let dst = this.destinations.get(key);
         if (!dst) return false;
 
-        dst.removeAllListeners();
-        this.destinations.delete(dst.toString());
+        if (dst instanceof Destination) dst.removeAllListeners();
+        this.destinations.delete(key);
         return true;
     }
 

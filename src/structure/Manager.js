@@ -54,6 +54,15 @@ class Manager extends EventEmitter{
                     this.gpos.set(data.gpio.toString(),data.gpio);
                     this.handleGpo(data.gpio);
                     this.emit("gpos",this.gpos);
+                })
+                .on("meter",data=>{
+                    this.emit("meter",data);
+                })
+                .on("subscribe",data=>{
+                    this.emit("subscribe",data);
+                })
+                .on("unsubscribe",data=>{
+                    this.emit("unsubscribe",data);
                 });
         });
     }
@@ -70,7 +79,7 @@ class Manager extends EventEmitter{
     }
 
     getSource(rtpa){
-        if (!rtpa || rtpa=="" || rtpa=="0.0.0.0") return null;
+        if (!rtpa || rtpa=="" || rtpa=="0.0.0.0" || rtpa=="255.255.255.255") return null;
 
         let srcFound = null;
         this.sources.forEach(src=>{
@@ -80,12 +89,8 @@ class Manager extends EventEmitter{
     }
 
     handleDst(dst) {
-        if (!dst.source || (dst.address && dst.address!=='' && dst.address==dst.source.address)) {
-            let src = this.getSource(dst.address);
-            if (src) {
-                dst.setSource(src);
-            }
-        }
+        let src = this.getSource(dst.address);
+        dst.setSource(src);
         this.stations.forEach(stn=>{
             let foundDst = stn.destinations.get(dst.toString());
             if (typeof foundDst==="string") stn.addDestination(dst);
