@@ -11,9 +11,8 @@ class AudioStream extends EventEmitter{
         this.manager = data.manager;
         this.device = data.device;
         this.channel = data.channel;
-
-        this.name = null;
-        this.address = null;
+        this.name = data.name;
+        this.address = data.address || null;
 
         this.channels = new Map();
     }
@@ -64,6 +63,20 @@ class AudioStream extends EventEmitter{
             default:
                 break;
         }
+    }
+
+    toJson(){
+        let json = {
+            channel: this.channel,
+            name: this.name,
+            channels: {}
+        };
+
+        this.channels.forEach(ch=>{
+            json.channels[ch.id] = ch.toJson();
+        });
+
+        return json;
     }
 
     toString(){
