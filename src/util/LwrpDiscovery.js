@@ -4,9 +4,10 @@ const dgram = require("dgram");
 const {EventEmitter} = require("events");
 
 class LwrpDiscovery extends EventEmitter{
-    constructor(){
+    constructor(autoadd=true){
         super();
 
+        this.autoadd = autoadd;
         this.port = 4001;
         this.mcast = "239.192.255.3";
 
@@ -21,7 +22,7 @@ class LwrpDiscovery extends EventEmitter{
                 this.emit("listening");
             })
             .on("message",(data,rinfo)=>{
-                this.addAddress(rinfo.address);
+                if (this.autoadd) this.addAddress(rinfo.address);
             })
             .on("error",err=>{
                 this.emit("error",err);

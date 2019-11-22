@@ -16,6 +16,7 @@ class LwrpSocket extends EventEmitter{
         this.pollInterval = LwrpData.pollInterval || 200;
 
         this.pollCommands = new Map();
+        this.input = [];
 
         this.socket = Socket();
         this.socket
@@ -69,11 +70,21 @@ class LwrpSocket extends EventEmitter{
     }
 
     async socketData(data){
-        data.toString().split("\r\n").forEach(async chunk=>{
-            if (chunk) {
-                this.emit("data",this.parseData(chunk));
-            }
+        let sData = data.toString();
+
+        if (this.input.length>0) {
+            let lastElement = this.input.pop();
+            sData = lastElement+=sData;
+        }
+
+        sData.split(/\r?\n/).forEach(d=>{
+            this.input.push(d);
         });
+
+        while (this.input.length>1) {
+            let chunk = this.input.shift();
+            this.emit("data",this.parseData(chunk));
+        }
     }
 
     async socketError(error){
@@ -163,7 +174,7 @@ class LwrpSocket extends EventEmitter{
                 parsed[p[1]] = p[2].replace(/"/g,"");
             }
         }
-
+        
         return parsed;
     }
 

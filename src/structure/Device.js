@@ -104,7 +104,9 @@ class Device extends EventEmitter{
         return gpo;
     }
 
-    async handleData(data){
+    async handleData(data={}){
+        if (!data) return;
+
         switch (data.VERB) {
             case "VER":
                 this.version = data.LWRP;

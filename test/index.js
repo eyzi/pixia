@@ -2,6 +2,7 @@
 
 const Pixia = require("..");
 const Gpio = require("../src/structure/Gpio");
+const Destination = require("../src/structure/Destination");
 
 let manager = new Pixia();
 
@@ -60,31 +61,24 @@ let s1 = manager.addStation({
     ]
 });
 
-manager.on("subscribe",_=>{
-    console.log("src sub");
-});
-
-let a = "test";
-let b = "test";
-
 s1
 .on("source",data=>{
-    console.log('src');
+    // console.log('src',data.toString());
 })
 .on("destination",data=>{
-    console.log(data.toString());
+    // console.log('dst',data.toString());
 })
 .on("gpi",data=>{
-    console.log('gpi');
+    // console.log('gpi',data.gpio.toString());
 })
 .on("gpo",data=>{
-    console.log('gpo');
+    // console.log('gpo',data.gpio.toString());
 })
 .on("subscribe",data=>{
-    console.log('subscribe');
+    console.log('subscribe',data.src.toString());
 })
 .on("unsubscribe",data=>{
-    console.log('unsubscribe');
+    console.log('unsubscribe',data.src.toString());
 })
 .on("meter",data=>{
     //console.log(data);

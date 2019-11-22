@@ -9,13 +9,13 @@ class Source extends AudioStream{
         this.subscribers = new Map();
     }
 
-    update(data){
-        super.update(data);
+    async update(data){
+        await super.update(data);
 
         let changed = false;
 
-        if (this.name!=data.NAME) {
-            this.name = data.NAME;
+        if (this.name!=data.PSNM) {
+            this.name = data.PSNM;
             changed = true;
         }
 
@@ -33,7 +33,6 @@ class Source extends AudioStream{
     }
 
     subscribe(dst){
-        console.log(dst);
         this.subscribers.set(dst.toString(),dst);
         this.emit("subscribe",{
             src: this,

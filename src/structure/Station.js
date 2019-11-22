@@ -19,29 +19,29 @@ class Station extends EventEmitter{
         this.gpis = new Map();
         this.gpos = new Map();
 
-        // if (data.sources && data.sources.length>0) {
-        //     for (let data of data.sources) {
-        //         this.addSource(data.data,data.label);
-        //     }
-        // }
-        //
-        // if (data.destinations && data.destinations.length>0) {
-        //     for (let data of data.destinations) {
-        //         this.addDestination(data.data,data.label);
-        //     }
-        // }
-        //
-        // if (data.gpis && data.gpis.length>0) {
-        //     for (let gpi of data.gpis) {
-        //         this.addGpi(gpi);
-        //     }
-        // }
-        //
-        // if (data.gpos && data.gpos.length>0) {
-        //     for (let gpo of data.gpos) {
-        //         this.addGpo(gpo);
-        //     }
-        // }
+        if (data.sources && data.sources.length>0) {
+            for (let src of data.sources) {
+                this.addSource(src.data,src.label);
+            }
+        }
+
+        if (data.destinations && data.destinations.length>0) {
+            for (let dst of data.destinations) {
+                this.addDestination(dst.data,dst.label);
+            }
+        }
+
+        if (data.gpis && data.gpis.length>0) {
+            for (let gpi of data.gpis) {
+                this.addGpi(gpi.data,gpi.label);
+            }
+        }
+
+        if (data.gpos && data.gpos.length>0) {
+            for (let gpo of data.gpos) {
+                this.addGpo(gpo.data,gpo.label);
+            }
+        }
     }
 
     addSource(src,label=[]){
@@ -75,18 +75,16 @@ class Station extends EventEmitter{
         let src = this.sources.get(key);
         if (!src) return false;
 
-        if (src instanceof Source) src.removeAllListeners();
+        if (src.data instanceof Source) src.data.removeAllListeners();
         this.sources.delete(key);
         return true;
     }
 
-
-
-    addDestination(dst){
+    addDestination(dst,label=[]){
         let key = (dst instanceof Destination) ? dst.toString() : dst;
         this.destinations.set(key,new StationIO({
             label: label,
-            data: src
+            data: dst
         }));
 
         if (dst instanceof Destination) {
@@ -107,71 +105,95 @@ class Station extends EventEmitter{
         let dst = this.destinations.get(key);
         if (!dst) return false;
 
-        if (dst instanceof Destination) dst.removeAllListeners();
+        if (dst.data instanceof Destination) dst.data.removeAllListeners();
         this.destinations.delete(key);
         return true;
     }
 
 
-    addGpi(gpi){
+    addGpi(gpi,label=[]){
+        let key = (gpi instanceof Gpi) ? gpi.toString() : gpi;
+        this.gpis.set(key,new StationIO({
+            label: label,
+            data: gpi
+        }));
+
         if (gpi instanceof Gpi) {
-            gpi.on("change",GpioInfo=>{
-                this.emit("gpi",GpioInfo);
+            gpi.on("change",GpioData=>{
+                this.emit("gpi",GpioData);
             });
-            this.gpis.set(gpi.toString(),new StationIO({
-                label: 'gpi',
-                data: gpi
-            }));
-        } else {
-            this.gpis.set(gpi,gpi);
         }
     }
 
     removeGpi(resolveGpi){
-        let gpi;
-
-        if (resolveGpi instanceof Gpi) {
-            gpi = this.gpis.get(resolveGpi.toString());
-        } else if (typeof resolveGpi==='string') {
-            gpi = this.gpis.get(resolveGpi);
-        }
-
+        let key = (resolveGpi instanceof Gpi) ? resolveGpi.toString() : resolveGpi;
+        let gpi = this.gpis.get(gpi);
         if (!gpi) return false;
 
-        gpi.removeAllListeners();
-        this.gpis.delete(gpi.toString());
+        if (gpi.data instanceof Gpi) gpi.data.removeAllListeners();
+        this.gpis.delete(key);
         return true;
     }
 
 
-    addGpo(gpo){
+    addGpo(gpo,label=[]){
+        let key = (gpo instanceof Gpo) ? gpo.toString() : gpo;
+        this.gpos.set(key,new StationIO({
+            label: label,
+            data: gpo
+        }));
+
         if (gpo instanceof Gpo) {
-            gpo.on("change",GpioInfo=>{
-                this.emit("gpo",GpioInfo);
+            gpo.on("change",GpioData=>{
+                this.emit("gpi",GpioData);
             });
-            this.gpos.set(gpo.toString(),new StationIO({
-                label: 'gpo',
-                data: gpo
-            }));
-        } else {
-            this.gpos.set(gpo,gpo);
         }
     }
 
     removeGpo(resolveGpo){
-        let gpo;
-
-        if (resolveGpo instanceof Gpo) {
-            gpo = this.gpos.get(resolveGpo.toString());
-        } else if (typeof resolveGpo==='string') {
-            gpo = this.gpos.get(resolveGpo);
-        }
-
+        let key = (resolveGpo instanceof Gpo) ? resolveGpo.toString() : resolveGpo;
+        let gpo = this.gpos.get(gpo);
         if (!gpo) return false;
 
-        gpo.removeAllListeners();
-        this.gpos.delete(gpo.toString());
+        if (gpo.data instanceof Gpo) gpo.data.removeAllListeners();
+        this.gpos.delete(key);
         return true;
+    }
+
+    updateDestinations(){
+        this.destinations.forEach(d=>{
+            if (typeof d.data=="string") {
+                let o = this.manager.destinations.get(d.data);
+                if (o) this.addDestination(o,d.label);
+            }
+        });
+    }
+
+    updateSources(){
+        this.sources.forEach(d=>{
+            if (typeof d.data=="string") {
+                let o = this.manager.sources.get(d.data);
+                if (o) this.addSource(o,d.label);
+            }
+        });
+    }
+
+    updateGpis(){
+        this.gpis.forEach(d=>{
+            if (typeof d.data=="string") {
+                let o = this.manager.gpis.get(d.data);
+                if (o) this.addGpi(o,d.label);
+            }
+        });
+    }
+
+    updateGpos(){
+        this.gpos.forEach(d=>{
+            if (typeof d.data=="string") {
+                let o = this.manager.gpos.get(d.data);
+                if (o) this.addGpo(o,d.label);
+            }
+        });
     }
 }
 

@@ -36,7 +36,7 @@ class AudioStream extends EventEmitter{
         }
     }
 
-    update(data){
+    async update(data){
         this.chCount = isNaN(data.NCHN) ? data.NCHN : Number(data.NCHN);
         if (this.channels.size==0) this.initChannels();
     }

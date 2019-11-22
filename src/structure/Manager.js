@@ -5,6 +5,8 @@ const Station = require("./Station");
 const {EventEmitter} = require("events");
 const LwrpDiscovery = require("../util/LwrpDiscovery");
 
+const Source = require("./Source");
+
 class Manager extends EventEmitter{
     constructor(){
         super();
@@ -89,32 +91,33 @@ class Manager extends EventEmitter{
     }
 
     handleDst(dst) {
-        let src = this.getSource(dst.address);
-        dst.setSource(src);
         this.stations.forEach(stn=>{
-            let foundDst = stn.destinations.get(dst.toString());
-            if (typeof foundDst==="string") stn.addDestination(dst);
+            stn.updateDestinations();
         });
     }
 
     handleSrc(src) {
+        this.destinations.forEach(dst=>{
+            if (!dst.source && dst.address) {
+                let src = this.getSource(dst.address);
+                if (src) dst.setSource(src);
+            }
+        });
+
         this.stations.forEach(stn=>{
-            let foundSrc = stn.sources.get(src.toString());
-            if (typeof foundSrc==="string") stn.addSource(src);
+            stn.updateSources();
         });
     }
 
     handleGpi(gpi) {
         this.stations.forEach(stn=>{
-            let foundGpi = stn.gpis.get(gpi.toString());
-            if (typeof foundGpi==="string") stn.addGpi(gpi);
+            stn.updateGpis();
         });
     }
 
     handleGpo(gpo) {
         this.stations.forEach(stn=>{
-            let foundGpo = stn.gpos.get(gpo.toString());
-            if (typeof foundGpo==="string") stn.addGpo(gpo);
+            stn.updateGpos();
         });
     }
 
@@ -122,8 +125,8 @@ class Manager extends EventEmitter{
         if (this.discovery) this.discovery.addAddress(address);
     }
 
-    initDiscovery(){
-        this.discovery = new LwrpDiscovery();
+    initDiscovery(autoadd){
+        this.discovery = new LwrpDiscovery(autoadd);
 
         this.discovery
             .on("address",address=>{
