@@ -62,9 +62,8 @@ class LwrpSocket extends EventEmitter{
     }
 
     async socketConnect(){
+        this.login();
         this.write("VER");
-        this.write("MTR");
-        this.write("SRC");
         this.emit("connected");
         this.run();
     }
@@ -93,6 +92,7 @@ class LwrpSocket extends EventEmitter{
                 this.running = false;
                 this.socket = null;
                 this.emit("invalid");
+                this.stop();
                 break;
             default:
                 this.running = false;
@@ -144,7 +144,7 @@ class LwrpSocket extends EventEmitter{
         switch (parsed.VERB) {
             case "ERROR":
                 parsed.CODE = dataArray.shift();
-                parsed.MESSAGE = dataArray.shift();
+                parsed.MESSAGE = dataArray.join(" ");
                 break;
         }
 
@@ -174,8 +174,13 @@ class LwrpSocket extends EventEmitter{
                 parsed[p[1]] = p[2].replace(/"/g,"");
             }
         }
-        
+
         return parsed;
+    }
+
+    login(password=null) {
+        if (!password) password = this.pass;
+        this.write(`LOGIN ${password}`);
     }
 
     write(message){

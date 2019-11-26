@@ -34,6 +34,8 @@ class Manager extends EventEmitter{
                 })
                 .on("invalid",_=>{
                     this.devices.delete(device.host);
+                    device.stop();
+                    device.removeAllListeners();
                     device = null;
                     reject(`Invalid Device`);
                 })
@@ -92,7 +94,7 @@ class Manager extends EventEmitter{
 
     handleDst(dst) {
         this.stations.forEach(stn=>{
-            stn.updateDestinations();
+            stn.updateDestination(dst);
         });
     }
 
@@ -105,19 +107,19 @@ class Manager extends EventEmitter{
         });
 
         this.stations.forEach(stn=>{
-            stn.updateSources();
+            stn.updateSource(src);
         });
     }
 
     handleGpi(gpi) {
         this.stations.forEach(stn=>{
-            stn.updateGpis();
+            stn.updateGpi(gpi);
         });
     }
 
     handleGpo(gpo) {
         this.stations.forEach(stn=>{
-            stn.updateGpos();
+            stn.updateGpo(gpo);
         });
     }
 

@@ -54,12 +54,16 @@ class Device extends EventEmitter{
             });
     }
 
+    allowedMeter(){
+        return this.devName!=="VX Engine" && (this.srcCount>0 || this.dstCount>0);
+    }
+
     initProperties(){
         if (this.srcCount>0) this.write("SRC");
         if (this.dstCount>0) this.write("DST");
         if (this.gpiCount>0) this.write("ADD GPI");
         if (this.gpoCount>0) this.write("ADD GPO");
-        this.lwrp.addCommand("MTR");
+        if (this.allowedMeter()) this.lwrp.addCommand("MTR");
     }
 
     createSource(AudioStreamData){
@@ -118,6 +122,7 @@ class Device extends EventEmitter{
                 this.emit("valid");
                 break;
             case "ERROR":
+                console.log(data.raw);
                 break;
             case "SRC":
                 let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
@@ -173,6 +178,10 @@ class Device extends EventEmitter{
                 }
                 break;
         }
+    }
+
+    stop(){
+        this.lwrp.stop();
     }
 
     write(message){

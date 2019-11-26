@@ -65,6 +65,22 @@ class AudioStream extends EventEmitter{
         }
     }
 
+    setLevel({lowTime,lowLevel,clipTime,clipLevel}){
+        let type;
+        switch(this.streamType){
+            case "SRC":
+                type="ICH";
+                break;
+            case "DST":
+                type="OCH";
+                break;
+        }
+
+        if (type){
+            this.device.write(`LVL ${type} ${this.channel} LOW.TIME:"${lowTime || 3000}" LOW.LEVEL:"${lowLevel || -1000}" CLIP.TIME:"${clipTime || 3000}" CLIP.LEVEL:"${clipLevel || 0}"`);
+        }
+    }
+
     toJson(){
         let json = {
             channel: this.channel,

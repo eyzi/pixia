@@ -44,10 +44,10 @@ class Station extends EventEmitter{
         }
     }
 
-    addSource(src,label=[]){
+    addSource(src,label){
         let key = (src instanceof Source) ? src.toString() : src;
         this.sources.set(key,new StationIO({
-            label: label,
+            label: label || [],
             data: src
         }));
 
@@ -67,6 +67,10 @@ class Station extends EventEmitter{
                     meter: MeterData
                 });
             });
+        } else {
+            // add host to manager address
+            let address = src.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/g);
+            if (address) this.manager.addAddress(address[0]);
         }
     }
 
@@ -80,13 +84,14 @@ class Station extends EventEmitter{
         return true;
     }
 
-    addDestination(dst,label=[]){
+    addDestination(dst,label){
         let key = (dst instanceof Destination) ? dst.toString() : dst;
         this.destinations.set(key,new StationIO({
-            label: label,
+            label: label || [],
             data: dst
         }));
 
+        console.log(dst);
         if (dst instanceof Destination) {
             dst.on("change",_=>{
                 this.emit("destination",dst);
@@ -97,6 +102,10 @@ class Station extends EventEmitter{
                     meter: MeterData
                 });
             });
+        } else {
+            // add host to manager address
+            let address = dst.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/g);
+            if (address) this.manager.addAddress(address[0]);
         }
     }
 
@@ -111,10 +120,10 @@ class Station extends EventEmitter{
     }
 
 
-    addGpi(gpi,label=[]){
+    addGpi(gpi,label){
         let key = (gpi instanceof Gpi) ? gpi.toString() : gpi;
         this.gpis.set(key,new StationIO({
-            label: label,
+            label: label || [],
             data: gpi
         }));
 
@@ -122,6 +131,10 @@ class Station extends EventEmitter{
             gpi.on("change",GpioData=>{
                 this.emit("gpi",GpioData);
             });
+        } else {
+            // add host to manager address
+            let address = gpi.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/g);
+            if (address) this.manager.addAddress(address[0]);
         }
     }
 
@@ -136,10 +149,10 @@ class Station extends EventEmitter{
     }
 
 
-    addGpo(gpo,label=[]){
+    addGpo(gpo,label){
         let key = (gpo instanceof Gpo) ? gpo.toString() : gpo;
         this.gpos.set(key,new StationIO({
-            label: label,
+            label: label || [],
             data: gpo
         }));
 
@@ -147,6 +160,10 @@ class Station extends EventEmitter{
             gpo.on("change",GpioData=>{
                 this.emit("gpi",GpioData);
             });
+        } else {
+            // add host to manager address
+            let address = gpo.match(/^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})/g);
+            if (address) this.manager.addAddress(address[0]);
         }
     }
 
@@ -160,40 +177,72 @@ class Station extends EventEmitter{
         return true;
     }
 
-    updateDestinations(){
-        this.destinations.forEach(d=>{
-            if (typeof d.data=="string") {
-                let o = this.manager.destinations.get(d.data);
-                if (o) this.addDestination(o,d.label);
-            }
-        });
+    updateDestination(dst){
+        let d = this.destinations.get(dst.toString());
+        if (d) {
+            this.destinations.set(dst.toString(),new StationIO({
+                data: dst,
+                label: d.label
+            }));
+        }
     }
 
-    updateSources(){
-        this.sources.forEach(d=>{
-            if (typeof d.data=="string") {
-                let o = this.manager.sources.get(d.data);
-                if (o) this.addSource(o,d.label);
-            }
-        });
+    updateSource(src){
+        let s = this.sources.get(src.toString());
+        if (s) {
+            this.sources.set(src.toString(),new StationIO({
+                data: src,
+                label: s.label
+            }));
+        }
     }
 
-    updateGpis(){
-        this.gpis.forEach(d=>{
-            if (typeof d.data=="string") {
-                let o = this.manager.gpis.get(d.data);
-                if (o) this.addGpi(o,d.label);
-            }
-        });
+    updateGpi(gpi){
+        let i = this.gpis.get(gpi.toString());
+        if (i) {
+            this.gpis.set(gpi.toString(),new StationIO({
+                data: gpi,
+                label: i.label
+            }));
+        }
     }
 
-    updateGpos(){
-        this.gpos.forEach(d=>{
-            if (typeof d.data=="string") {
-                let o = this.manager.gpos.get(d.data);
-                if (o) this.addGpo(o,d.label);
-            }
-        });
+    updateGpo(gpo){
+        let o = this.gpos.get(gpo.toString());
+        if (o) {
+            this.gpos.set(gpo.toString(),new StationIO({
+                data: gpo,
+                label: o.label
+            }));
+        }
+    }
+
+    srcByTag(tag) {
+        for (let d in this.sources.values()) {
+            if (d.hasTag(tag)) return d;
+        }
+        return null;
+    }
+
+    dstByTag(tag) {
+        for (let d of this.destinations.values()) {
+            if (d.hasTag(tag)) return d;
+        }
+        return null;
+    }
+
+    gpiByTag(tag) {
+        for (let d in this.gpis.values()) {
+            if (d.hasTag(tag)) return d;
+        }
+        return null;
+    }
+
+    gpoByTag(tag) {
+        for (let d in this.gpos.values()) {
+            if (d.hasTag(tag)) return d;
+        }
+        return null;
     }
 }
 
