@@ -6,9 +6,6 @@ const Destination = require("../src/structure/Destination");
 
 let manager = new Pixia();
 
-manager.addAddress("172.16.0.5");
-manager.addAddress("172.16.0.11");
-
 let s1 = manager.addStation({
     name:"Test Station",
     sources:[
@@ -52,12 +49,6 @@ let s1 = manager.addStation({
         }
     ]
 });
-
-setTimeout(_=>{
-    let d = s1.dstByTag("live");
-    d.data.setName("DST Test");
-    d.data.setAddress("239.192.1.245");
-},5000);
 
 s1
 .on("source",data=>{

@@ -93,6 +93,8 @@ class Manager extends EventEmitter{
     }
 
     handleDst(dst) {
+        this.emit("destination",dst);
+
         this.stations.forEach(stn=>{
             stn.updateDestination(dst);
         });
@@ -106,18 +108,24 @@ class Manager extends EventEmitter{
             }
         });
 
+        this.emit("source",src);
+
         this.stations.forEach(stn=>{
             stn.updateSource(src);
         });
     }
 
     handleGpi(gpi) {
+        this.emit("gpi",gpi);
+
         this.stations.forEach(stn=>{
             stn.updateGpi(gpi);
         });
     }
 
     handleGpo(gpo) {
+        this.emit("gpo",gpo);
+
         this.stations.forEach(stn=>{
             stn.updateGpo(gpo);
         });
