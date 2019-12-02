@@ -8,7 +8,7 @@ const LwrpDiscovery = require("../util/LwrpDiscovery");
 const Source = require("./Source");
 
 class Manager extends EventEmitter{
-    constructor(options){
+    constructor(options={}){
         super();
 
         this.stations = new Map();
