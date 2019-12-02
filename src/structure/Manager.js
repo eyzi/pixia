@@ -18,7 +18,7 @@ class Manager extends EventEmitter{
         this.gpis = new Map();
         this.gpos = new Map();
 
-        this.initDiscovery(options.autoadd);
+        this.initDiscovery(options.autoadd || false);
     }
 
     addDevice(DeviceData){
