@@ -8,7 +8,7 @@ const LwrpDiscovery = require("../util/LwrpDiscovery");
 const Source = require("./Source");
 
 class Manager extends EventEmitter{
-    constructor(){
+    constructor(options){
         super();
 
         this.stations = new Map();
@@ -18,7 +18,7 @@ class Manager extends EventEmitter{
         this.gpis = new Map();
         this.gpos = new Map();
 
-        this.initDiscovery();
+        this.initDiscovery(options.autoadd);
     }
 
     addDevice(DeviceData){
@@ -135,7 +135,7 @@ class Manager extends EventEmitter{
         if (this.discovery) this.discovery.addAddress(address);
     }
 
-    initDiscovery(autoadd){
+    initDiscovery(autoadd=false){
         this.discovery = new LwrpDiscovery(autoadd);
 
         this.discovery
