@@ -20,11 +20,15 @@ class Destination extends AudioStream{
             changed = true;
         }
 
-        if (data.ADDR) {
+        if (this.address && !data.ADDR) {
+			// gone silent
+			this.setSource(null);
+			this.address = null;
+			changed = true;
+		} else if (data.ADDR) {
             let parsedAddr = data.ADDR.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i);
             let oldAddr = this.address;
             this.address = (parsedAddr) ? parsedAddr[0] : null;
-            console.log(oldAddr,this.address);
             if (oldAddr!=this.address) {
                 let src = this.manager.getSource(this.address);
                 this.setSource(src);
