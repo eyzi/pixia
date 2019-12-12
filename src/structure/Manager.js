@@ -10,7 +10,10 @@ const Source = require("./Source");
 class Manager extends EventEmitter{
     constructor(options={}){
         super();
+        this.init(options);
+    }
 
+    init(options={}) {
         this.stations = new Map();
         this.devices = new Map();
         this.sources = new Map();
