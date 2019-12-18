@@ -53,7 +53,7 @@ class Manager extends EventEmitter{
                     this.emit("destinations",this.destinations);
                 })
                 .on("gpi",data=>{
-                    this.gpis.set(data.gpio.toString(),data.gpio);
+                	this.gpis.set(data.gpio.toString(),data.gpio);
                     this.handleGpi(data.gpio);
                     this.emit("gpis",this.gpis);
                 })
@@ -136,6 +136,13 @@ class Manager extends EventEmitter{
 
     addAddress(address){
         if (this.discovery) this.discovery.addAddress(address);
+    }
+
+    removeAddress(address){
+        if (this.discovery) this.discovery.addAddress(address);
+        let device = this.devices.get(address);
+        if (device) device.stop();
+        this.devices.delete(address);
     }
 
     initDiscovery(autoadd=false){
