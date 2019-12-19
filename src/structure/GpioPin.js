@@ -12,16 +12,17 @@ class GpioPin extends EventEmitter{
 
     update(value){
         if (this.value!==value){
+            let previousValue = this.value;
             this.value = value;
-            this.emit("change");
-            switch (this.value) {
-                case "L":
-                    this.emit("low");
-                    break;
-                case "H":
-                    this.emit("high");
-                    break;
-            }
+			if (this.value=="L" || (this.value=="l" && previousValue=="h")) {
+				this.emit("low");
+			} else if (this.value=="H" || (this.value=="h" && previousValue=="l")) {
+				this.emit("high");
+			}
+
+			if (this.value!==previousValue) {
+				this.emit("change");
+			}
         }
     }
 
