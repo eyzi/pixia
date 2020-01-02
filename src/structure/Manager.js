@@ -138,6 +138,15 @@ class Manager extends EventEmitter{
         if (this.discovery) this.discovery.addAddress(address);
     }
 
+    removeAddress(address){
+        let d = this.devices.get(address)
+        if (d) {
+            d.stop()
+            d.removeAllListeners()
+        }
+        if (this.discovery) this.discovery.removeAddress(address);
+    }
+
     initDiscovery(autoadd=false){
         this.discovery = new LwrpDiscovery(autoadd);
 
