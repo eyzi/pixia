@@ -144,6 +144,7 @@ class Manager extends EventEmitter{
             d.stop()
             d.removeAllListeners()
         }
+        this.devices.delete(address)
         if (this.discovery) this.discovery.removeAddress(address);
     }
 
