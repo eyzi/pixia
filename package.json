@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "test": "node test/index.js",
-    "patch": "npm version patch && npm push && npm publish"
+    "patch": "npm version patch && git push -f origin master && npm publish"
   },
   "repository": {
     "type": "git",
