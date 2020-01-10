@@ -124,6 +124,23 @@ let ParseMeter = function(data){
     return parsedData;
 }
 
+let ParseLevel = function(data){
+    if (!data || data.trim()=="") return null;
+    let array = DelimitSpace(data);
+    let parsedData = {
+        'VERB': array.shift(),
+        'TYPE': array.shift()
+    };
+
+    let chMix = array.shift().split('.');
+    parsedData['CHANNEL'] = chMix[0];
+    if (chMix[1]) parsedData['SIDE'] = chMix[1];
+
+    parsedDatap['FORM'] = array.shift(); // LOW, NO-LOW, CLIP, or NO-CLIP
+
+    return parsedData;
+}
+
 let ParseGeneric = function(data){
     if (!data || data.trim()=="") return null;
     let array = DelimitSpace(data);
@@ -148,6 +165,9 @@ let Parse = function(data){
         case "MTR":
             return ParseMeter(data);
             break;
+        case "LVL":
+            return ParseLevel(data);
+            break;
         case "VER":
         default:
             return ParseGeneric(data);
@@ -162,5 +182,6 @@ module.exports = {
     Parse,
     ParseSource,
     ParseDestination,
-    ParseMeter
+    ParseMeter,
+    ParseLevel
 }

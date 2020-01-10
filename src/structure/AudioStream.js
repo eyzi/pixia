@@ -13,8 +13,10 @@ class AudioStream extends EventEmitter{
         this.channel = data.channel;
         this.name = data.name;
         this.address = data.address || null;
-
+        
+        this.initialized = false;
         this.channels = new Map();
+        this.setLevel({});
     }
 
     initChannels(){
@@ -39,6 +41,7 @@ class AudioStream extends EventEmitter{
     async update(data){
         this.chCount = isNaN(data.NCHN) ? data.NCHN : Number(data.NCHN);
         if (this.channels.size==0) this.initChannels();
+        if (!this.initialized) this.initialized = true;
     }
 
     setMeter(data){

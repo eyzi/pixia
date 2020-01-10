@@ -65,6 +65,9 @@ class Manager extends EventEmitter{
                 .on("meter",data=>{
                     this.emit("meter",data);
                 })
+                .on("level",data=>{
+                    this.emit("level",data);
+                })
                 .on("subscribe",data=>{
                     this.emit("subscribe",data);
                 })

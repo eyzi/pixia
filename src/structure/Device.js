@@ -177,6 +177,16 @@ class Device extends EventEmitter{
                     if (dst) dst.setMeter(data);
                 }
                 break;
+            case "LVL":
+                this.emit('level', {
+                    type: data.TYPE,
+                    key: `${this.host}/${data.CHANNEL}`,
+                    device: this.host,
+                    channel: data.CHANNEL,
+                    side: data.SIDE,
+                    form: data.FORM
+                })
+                break;
         }
     }
 

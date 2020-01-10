@@ -155,7 +155,12 @@ class LwrpSocket extends EventEmitter{
         }
 
         switch (parsed.VERB) {
-            case "MTR": case "LVL":
+            case "LVL":
+                let chMix = dataArray.shift().split(".");
+                parsed.CHANNEL = chMix[0];
+                parsed.SIDE = chMix[1];
+                break;
+            case "MTR":
             case "SRC": case "DST":
             case "GPI": case "GPO":
                 parsed.CHANNEL = dataArray.shift();
@@ -163,6 +168,9 @@ class LwrpSocket extends EventEmitter{
         }
 
         switch (parsed.VERB) {
+            case "LVL":
+                parsed.FORM = dataArray.shift();
+                break;
             case "GPI": case "GPO":
                 parsed.VALUE = dataArray.shift();
                 break;
