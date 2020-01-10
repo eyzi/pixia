@@ -13,6 +13,9 @@ class AudioStream extends EventEmitter{
         this.channel = data.channel;
         this.name = data.name;
         this.address = data.address || null;
+
+        this.lowStatus = false;
+        this.clipStatus = false;
         
         this.initialized = false;
         this.channels = new Map();
@@ -64,6 +67,39 @@ class AudioStream extends EventEmitter{
                 });
                 break;
             default:
+                break;
+        }
+    }
+
+    setLevelInfo (form, side) {
+        switch (form.toUpperCase()) {
+            case 'LOW':
+                let prevLow = this.lowStatus
+                this.lowStatus = true
+                if (this.lowStatus !== prevLow) {
+                    this.emit("change", this)
+                }
+                break;
+            case 'NO-LOW':
+                let prevLow = this.lowStatus
+                this.lowStatus = false
+                if (this.lowStatus !== prevLow) {
+                    this.emit("change", this)
+                }
+                break;
+            case 'CLIP':
+                let prevClip = this.clipStatus
+                this.clipStatus = true
+                if (this.clipStatus !== prevClip) {
+                    this.emit("change", this)
+                }
+                break;
+            case 'NO-CLIP':
+                let prevClip = this.clipStatus
+                this.clipStatus = false
+                if (this.clipStatus !== prevClip) {
+                    this.emit("change", this)
+                }
                 break;
         }
     }
