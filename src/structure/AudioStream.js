@@ -72,30 +72,28 @@ class AudioStream extends EventEmitter{
     }
 
     setLevelInfo (form, side) {
+        this.prevLow = this.lowStatus
+        this.prevClip = this.clipStatus
         switch (form.toUpperCase()) {
             case 'LOW':
-                let prevLow = this.lowStatus
                 this.lowStatus = true
                 if (this.lowStatus !== prevLow) {
                     this.emit("change", this)
                 }
                 break;
             case 'NO-LOW':
-                let prevLow = this.lowStatus
                 this.lowStatus = false
                 if (this.lowStatus !== prevLow) {
                     this.emit("change", this)
                 }
                 break;
             case 'CLIP':
-                let prevClip = this.clipStatus
                 this.clipStatus = true
                 if (this.clipStatus !== prevClip) {
                     this.emit("change", this)
                 }
                 break;
             case 'NO-CLIP':
-                let prevClip = this.clipStatus
                 this.clipStatus = false
                 if (this.clipStatus !== prevClip) {
                     this.emit("change", this)
