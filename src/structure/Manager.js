@@ -42,6 +42,9 @@ class Manager extends EventEmitter{
                     device = null;
                     reject(`Invalid Device`);
                 })
+                .on("connected", _=>{
+                    this.emit("connected", device.host);
+                })
                 .on("socket-error", data=>{
                     this.emit("socket-error", data);
                 })

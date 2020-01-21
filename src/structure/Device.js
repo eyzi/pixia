@@ -46,6 +46,9 @@ class Device extends EventEmitter{
             .on("invalid",_=>{
                 this.emit("invalid");
             })
+            .on("connected", _=>{
+                this.emit("connected");
+            })
             .on("socket-error", data=>{
                 this.emit("socket-error", data);
             })

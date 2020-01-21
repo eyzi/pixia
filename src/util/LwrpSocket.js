@@ -100,6 +100,7 @@ class LwrpSocket extends EventEmitter{
                     host: this.host,
                     error: error
                 });
+                console.log(`connecting in ${this.reconnect}ms`);
                 if (this.reconnect) {
                     setTimeout(_=>{
                         this.socket = Socket();
