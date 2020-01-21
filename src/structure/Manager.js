@@ -42,6 +42,9 @@ class Manager extends EventEmitter{
                     device = null;
                     reject(`Invalid Device`);
                 })
+                .on("socket-error", data=>{
+                    this.emit("socket-error", data);
+                })
                 .on("source",src=>{
                     this.sources.set(src.toString(),src);
                     this.handleSrc(src);
