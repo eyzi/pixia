@@ -88,7 +88,7 @@ class LwrpSocket extends EventEmitter{
 
     async socketError(error){
         switch (error.code) {
-            case "ECONNREFUSED": case "ECONNRESET":
+            case "ECONNREFUSED":
                 this.running = false;
                 this.socket = null;
                 this.emit("invalid");
