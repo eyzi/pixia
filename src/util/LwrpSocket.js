@@ -88,7 +88,7 @@ class LwrpSocket extends EventEmitter{
 
     async socketError(error){
         switch (error.code) {
-            case "ECONNREFUSED":
+            case "ECONNREFUSED": case "ECONNRESET":
                 this.running = false;
                 this.socket = null;
                 this.emit("invalid");
@@ -192,7 +192,7 @@ class LwrpSocket extends EventEmitter{
     }
 
     write(message){
-        this.socket.write(`${message}\r\n`);
+        if (this.socket) this.socket.write(`${message}\r\n`);
     }
 }
 
