@@ -98,6 +98,7 @@ class LwrpSocket extends EventEmitter{
                 this.emit("error",error);
                 if (this.reconnect) {
                     setTimeout(_=>{
+                        this.socket = Socket();
                         this.socket.connect(this.port,this.host);
                     },this.reconnect);
                 }
