@@ -39,8 +39,9 @@ class LwrpSocket extends EventEmitter{
     }
 
     stop(){
-        clearInterval(this.poller);
         this.running=false;
+        this.socket = null;
+        clearInterval(this.poller);
     }
 
     hasCommand(command){
@@ -89,13 +90,11 @@ class LwrpSocket extends EventEmitter{
     async socketError(error){
         switch (error.code) {
             case "ECONNREFUSED":
-                this.running = false;
-                this.socket = null;
-                this.emit("invalid");
                 this.stop();
+                this.emit("invalid");
                 break;
             default:
-                this.running = false;
+                this.stop();
                 this.emit("error",error);
                 if (this.reconnect) {
                     setTimeout(_=>{
