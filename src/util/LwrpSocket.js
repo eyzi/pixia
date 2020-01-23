@@ -29,10 +29,14 @@ class LwrpSocket extends EventEmitter{
 
     run () {
         this.poller = setInterval(_=>{
-            this.pollCommands.forEach(pc=>{
-                this.write(pc.call());
-                pc.checkValid();
-            });
+            if (this.running) {
+                this.pollCommands.forEach(pc=>{
+                    this.write(pc.call());
+                    pc.checkValid();
+                });
+            } else {
+                clearInterval(this.poller);
+            }
         },this.pollInterval);
         this.running=true;
         this.emit("running");

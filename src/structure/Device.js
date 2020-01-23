@@ -56,7 +56,7 @@ class Device extends EventEmitter{
                 this.handleData(data);
             })
             .on("error",error=>{
-                console.error(error);
+                console.error(`[ERROR] ${error.address}: ${error.code}`);
             });
     }
 
