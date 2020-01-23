@@ -1,3 +1,2 @@
 "use strict";
-import Manager from "src/structure/Manager"
-export default Manager;
+module.exports = require("./src/structure/Manager");
