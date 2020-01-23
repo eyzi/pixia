@@ -144,7 +144,9 @@ class Manager extends EventEmitter{
     }
 
     addAddress(address){
-        if (this.discovery) this.discovery.addAddress(address);
+        if (!this.discovery) return Promise.reject();
+        this.discovery.addAddress(address);
+        return this.addDevice({host:address});
     }
 
     removeAddress(address){
@@ -161,10 +163,10 @@ class Manager extends EventEmitter{
         this.discovery = new LwrpDiscovery(autoadd);
 
         this.discovery
-            .on("address",address=>{
-                // add a as device. device returns an object if successfully connected or null if not
-                this.addDevice({host:address}).catch(console.error);
-            })
+            // .on("address",address=>{
+            //     // add a as device. device returns an object if successfully connected or null if not
+            //     this.addDevice({host:address}).catch(console.error);
+            // })
             .on("ready",_=>{
                 console.log(`LWRP Discovery is ready`);
             })
