@@ -46,11 +46,17 @@ class Device extends EventEmitter{
             .on("invalid",_=>{
                 this.emit("invalid");
             })
+            .on("connected", _=>{
+                this.emit("connected");
+            })
+            .on("socket-error", data=>{
+                this.emit("socket-error", data);
+            })
             .on("data",data=>{
                 this.handleData(data);
             })
             .on("error",error=>{
-                console.error(error);
+                console.error(`[ERROR] ${this.host}: ${error.code}`);
             });
     }
 
@@ -176,6 +182,23 @@ class Device extends EventEmitter{
                     let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
                     if (dst) dst.setMeter(data);
                 }
+                break;
+            case "LVL":
+                if (data.TYPE==="ICH") {
+                    let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
+                    if (src) src.setLevelInfo(data.FORM,data.SIDE);
+                } else if (data.TYPE==="OCH") {
+                    let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
+                    if (dst) dst.setLevelInfo(data.FORM,data.SIDE);
+                }
+                this.emit('level', {
+                    type: data.TYPE,
+                    key: `${this.host}/${data.CHANNEL}`,
+                    device: this.host,
+                    channel: data.CHANNEL,
+                    side: data.SIDE,
+                    form: data.FORM
+                })
                 break;
         }
     }

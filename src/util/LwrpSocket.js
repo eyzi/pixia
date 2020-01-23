@@ -29,18 +29,23 @@ class LwrpSocket extends EventEmitter{
 
     run () {
         this.poller = setInterval(_=>{
-            this.pollCommands.forEach(pc=>{
-                this.write(pc.call());
-                pc.checkValid();
-            });
+            if (this.running) {
+                this.pollCommands.forEach(pc=>{
+                    this.write(pc.call());
+                    pc.checkValid();
+                });
+            } else {
+                clearInterval(this.poller);
+            }
         },this.pollInterval);
         this.running=true;
         this.emit("running");
     }
 
     stop(){
-        clearInterval(this.poller);
         this.running=false;
+        this.socket = null;
+        clearInterval(this.poller);
     }
 
     hasCommand(command){
@@ -89,16 +94,24 @@ class LwrpSocket extends EventEmitter{
     async socketError(error){
         switch (error.code) {
             case "ECONNREFUSED":
-                this.running = false;
-                this.socket = null;
-                this.emit("invalid");
                 this.stop();
+                this.emit("invalid");
                 break;
             default:
-                this.running = false;
+                this.stop();
                 this.emit("error",error);
+                this.emit("socket-error", {
+                    host: this.host,
+                    error: error
+                });
+                console.log(`Socket reconnecting in ${this.reconnect}ms`);
                 if (this.reconnect) {
                     setTimeout(_=>{
+                        this.socket = Socket();
+                        this.socket
+                            .on("connect",_=>this.socketConnect())
+                            .on("data",data=>this.socketData(data))
+                            .on("error",error=>this.socketError(error));
                         this.socket.connect(this.port,this.host);
                     },this.reconnect);
                 }
@@ -155,7 +168,12 @@ class LwrpSocket extends EventEmitter{
         }
 
         switch (parsed.VERB) {
-            case "MTR": case "LVL":
+            case "LVL":
+                let chMix = dataArray.shift().split(".");
+                parsed.CHANNEL = chMix[0];
+                parsed.SIDE = chMix[1];
+                break;
+            case "MTR":
             case "SRC": case "DST":
             case "GPI": case "GPO":
                 parsed.CHANNEL = dataArray.shift();
@@ -163,6 +181,9 @@ class LwrpSocket extends EventEmitter{
         }
 
         switch (parsed.VERB) {
+            case "LVL":
+                parsed.FORM = dataArray.shift();
+                break;
             case "GPI": case "GPO":
                 parsed.VALUE = dataArray.shift();
                 break;
@@ -184,7 +205,7 @@ class LwrpSocket extends EventEmitter{
     }
 
     write(message){
-        this.socket.write(`${message}\r\n`);
+        if (this.socket) this.socket.write(`${message}\r\n`);
     }
 }
 

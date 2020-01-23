@@ -42,6 +42,12 @@ class Manager extends EventEmitter{
                     device = null;
                     reject(`Invalid Device`);
                 })
+                .on("connected", _=>{
+                    this.emit("connected", device.host);
+                })
+                .on("socket-error", data=>{
+                    this.emit("socket-error", data);
+                })
                 .on("source",src=>{
                     this.sources.set(src.toString(),src);
                     this.handleSrc(src);
@@ -64,6 +70,9 @@ class Manager extends EventEmitter{
                 })
                 .on("meter",data=>{
                     this.emit("meter",data);
+                })
+                .on("level",data=>{
+                    this.emit("level",data);
                 })
                 .on("subscribe",data=>{
                     this.emit("subscribe",data);
@@ -135,7 +144,19 @@ class Manager extends EventEmitter{
     }
 
     addAddress(address){
-        if (this.discovery) this.discovery.addAddress(address);
+        if (!this.discovery) return Promise.reject();
+        this.discovery.addAddress(address);
+        return this.addDevice({host:address});
+    }
+
+    removeAddress(address){
+        let d = this.devices.get(address)
+        if (d) {
+            d.stop()
+            d.removeAllListeners()
+        }
+        this.devices.delete(address)
+        if (this.discovery) this.discovery.removeAddress(address);
     }
 
     removeAddress(address){
@@ -149,10 +170,10 @@ class Manager extends EventEmitter{
         this.discovery = new LwrpDiscovery(autoadd);
 
         this.discovery
-            .on("address",address=>{
-                // add a as device. device returns an object if successfully connected or null if not
-                this.addDevice({host:address}).catch(console.error);
-            })
+            // .on("address",address=>{
+            //     // add a as device. device returns an object if successfully connected or null if not
+            //     this.addDevice({host:address}).catch(console.error);
+            // })
             .on("ready",_=>{
                 console.log(`LWRP Discovery is ready`);
             })
