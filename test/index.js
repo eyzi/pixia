@@ -1,7 +1,8 @@
 "use strict";
 
 const a1 = [
-  "172.16.16.114"
+  "172.16.0.5",
+  "172.16.0.11"
 ];
 const a10 = [
   "172.16.16.101",
@@ -58,23 +59,15 @@ const a40 = [
 const Pixia = require("..");
 let manager = new Pixia();
 
-manager.on("new-source", src => {
-	console.log(`SRC create: ${src.name}`);
-});
-
 manager.on("source", src => {
 	console.log(`SRC change: ${src.name}`);
 });
 
-manager.on("new-destination", dst => {
-	console.log(`DST create: ${dst.name}`);
-});
-
 manager.on("destination", dst => {
-	console.log(`DST change: ${dst.name}`);
+  console.log(`DST change: ${dst.name}`);
 });
 
 
-a40.forEach(address => {
+a1.forEach(address => {
   let d = manager.addAddress(address);
 });

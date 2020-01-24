@@ -259,7 +259,7 @@ class Manager extends EventEmitter {
 		let dst = new Destination(LwrpData);
 
 		dst.on("change", DestinationData => {
-			this.emit("destination", DestinationData)
+			this.emit("destination", DestinationData);
 		});
 		
 		dst.setSource(this.getSourceByRtpa(dst.address));

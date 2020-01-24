@@ -8,14 +8,19 @@ class Destination extends AudioStream {
     data.streamType = "SRC";
     super(data);
 	
-	this.name = data.NAME;
-	let parsedAddr = data.ADDR.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i);
-	this.address = parsedAddr ? parsedAddr[0] : null;
+    this.name = data.NAME;
+    let parsedAddr = data.ADDR.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i);
+    this.address = parsedAddr ? parsedAddr[0] : null;
     this.source = null;
   }
 
   async update(data) {
-    let changed = await super.update(data);
+    let changed = false;
+
+    if (this.name !== data.NAME) {
+      this.name = data.NAME;
+      changed = true;
+    }
     
     let parsedAddr = data.ADDR.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i);
     let newAddress = parsedAddr ? parsedAddr[0] : null;

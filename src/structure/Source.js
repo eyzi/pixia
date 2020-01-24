@@ -13,7 +13,17 @@ class Source extends AudioStream {
   }
 
   async update(data) {
-    let changed = await super.update(data);
+    let changed = false;
+
+    if (this.name !== data.PSNM) {
+      this.name = data.PSNM;
+      changed = true;
+    }
+
+    if (this.address !== data.RTPA) {
+      this.address = data.RTPA;
+      changed = true;
+    }
 
     if (changed) {
       // emit change
@@ -22,7 +32,7 @@ class Source extends AudioStream {
   }
 
   subscribe(dst) {
-    this.emit("subscribe",{
+    this.emit("subscribe", {
       src: this,
       dst: dst
     });
