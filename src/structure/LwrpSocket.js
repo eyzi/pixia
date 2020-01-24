@@ -18,6 +18,7 @@ class LwrpSocket extends EventEmitter {
 		this.socket = Socket();
 
 		this.socket.on("connect", () => {
+			console.info(`${Device.host} connected`);
 			this.login();
 			this.write("VER");
 			this.emit("connected");
