@@ -158,25 +158,34 @@ class Manager extends EventEmitter {
 		if (!device) return null;
 
 		this.devices.set(device.host, device);
+		this.emit("device-change");
 		this.emit("devices", this.devices);
 
 		device.on("connecting", () => {
+			this.emit("device-change");
 			this.emit("connecting");
 		});
 
 		device.on("run", () => {
+			this.emit("device-change");
 			this.emit("run");
 		});
 
 		device.on("pause", () => {
+			this.emit("device-change");
 			this.emit("pause");
 		});
 
 		device.on("stop", () => {
+			this.emit("device-change");
 			this.removeAddress(device.host);
 		});
 
 		return device;
+	}
+
+	dSTATE() {
+		return Device.STATE;
 	}
 
 	getSourceByRtpa(rtpa) {
