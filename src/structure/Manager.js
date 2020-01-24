@@ -6,125 +6,167 @@ const Device = require("./Device");
 const { EventEmitter } = require("events");
 
 class Manager extends EventEmitter {
-  constructor (options = {}) {
-    super();
-    this.init(options);
-  }
+	constructor (options = {}) {
+		super();
+		this.init(options);
+	}
 
-  init(options) {
-    if (this.devices) this.devices.clear();
+	init(options) {
+		if (this.devices) this.devices.clear();
+		if (this.sources) this.sources.clear();
+		if (this.destinations) this.destinations.clear();
+		if (this.gpis) this.gpis.clear();
+		if (this.gpos) this.gpos.clear();
 
-    // option variables
-    this.lwAdAutoadd = options.lwAdAutoadd || false;
-    this.lwrpPort = options.lwrpPort || 93;
-    this.lwAdPort = options.lwAdPort || 4001;
-    this.lwAdMcast = options.lwAdMcast || "239.192.255.3";
+		// option variables
+		this.lwAdAutoinit = options.lwAdAutoinit || false;
+		this.lwrpPort = options.lwrpPort || 93;
+		this.lwAdPort = options.lwAdPort || 4001;
+		this.lwAdMcast = options.lwAdMcast || "239.192.255.3";
 
-    // instance variables
-    this.devices = new Map();
-  }
+		// instance variables
+		this.devices = new Map(); // some devices, especially discovered, will not be initialized. run device.initialize() to start them
+		this.sources = new Map();
+		this.destinations = new Map();
+		this.gpis = new Map();
+		this.gpos = new Map();
+	}
 
-  initDiscovery() {
-    this.socket = dgram.createSocket({
-      type: "udp4",
-      reuseAddr: true
-    });
+	initDiscovery() {
+		this.socket = dgram.createSocket({
+			type: "udp4",
+			reuseAddr: true
+		});
 
-    this.socket
-      .on("listening",_=>{
-          this.emit("lwAdListening");
-      })
-      .on("message", (data,rinfo) => {
-          if (this.lwAdAutoadd) this.addAddress(rinfo.address);
-      })
-      .on("error", err => {
-          this.emit("lwAdError", err);
-      });
+		this.socket
+			.on("listening",()=>{
+				this.emit("lwAdListening");
+			})
+			.on("message", (data,rinfo) => {
+				this.addAddress(rinfo.address, this.lwAdAutoinit);
+			})
+			.on("error", err => {
+				this.emit("lwAdError", err);
+			});
 
-    this.socket.bind(this.lwAdPort, _ => {
-      this.socket.addMembership(this.lwAdMcast);
-      this.emit("lwAdReady");
-    });
-  }
+		this.socket.bind(this.lwAdPort, () => {
+			this.socket.addMembership(this.lwAdMcast);
+			this.emit("lwAdReady");
+		});
+	}
 
-  validAddress(options = {}) {
-    let host = options.host;
-    let port = options.port || 93;
-    let retries = options.retries || 3;
-    let reconnectInterval = options.reconnectInterval || 3000;
+	validAddress(options = {}) {
+		let host = options.host;
+		let port = options.port || 93;
+		let retries = options.retries || 3;
+		let reconnectInterval = options.reconnectInterval || 3000;
 
-    return new Promise((resolve, reject) => {
-      if (!host) reject("Need host to check address");
+		return new Promise((resolve, reject) => {
+			if (!host) reject("Need host to check address");
 
-      let socket = Socket();
-      let tries = 0;
+			let socket = Socket();
+			let currentTries = retries;
 
-      socket.on("connect", _ => {
-        resolve(true);
-        socket.destroy();
-      });
+			socket.on("connect", () => {
+				resolve(true);
+				socket.destroy();
+			});
 
-      socket.on("error", SocketError => {
-        switch (SocketError.code) {
-          case "ECONNREFUSED":
-            resolve(false);
-            socket.destroy();
-            break;
-          default:
-            if (currentTries >= tries) {
-              resolve(false);
-              socket.destroy();
-            } else {
-              setTimeout(_ => {
-                socket.connect(address, port);
-              }, reconnectInterval);
-            }
-            break;
-        }
-      })
+			socket.on("error", SocketError => {
+				switch (SocketError.code) {
+				case "ECONNREFUSED":
+					resolve(false);
+					socket.destroy();
+					break;
+				default:
+					if (currentTries <= 0) {
+						resolve(false);
+						socket.destroy();
+					} else {
+						currentTries--;
+						setTimeout(() => {
+							socket.connect(host, port);
+						}, reconnectInterval);
+					}
+					break;
+				}
+			});
 
-      socket.connect(address, port);
-    });
-  }
+			socket.connect(host, port);
+		});
+	}
 
-  addAddress(address) {
-    if (!this.devices.has(address)) {
-      this.devices.set(address, null);
-      this.addDevice({ host: address });
-    }
-  }
+	addAddress(address, initialize = true) {
+		if (this.devices.has(address)) {
+			return this.devices.get(address);
+		} else {
+			return this.addDevice({ host: address, initialize: initialize });
+		}
+	}
 
-  removeAddress(address) {
-    if (!this.devices.has(address)) {
-      this.devices.delete(address);
-    }
-  }
+	async removePropertiesByHost(host) {
+		// remove properties tied with this address
+		this.sources.forEach((source, id) => {
+			if (source.host == host) {
+				this.sources.delete(id);
+			}
+		});
 
-  /**
+		this.destinations.forEach((destination, id) => {
+			if (destination.host == host) {
+				this.destinations.delete(id);
+			}
+		});
+
+		this.gpis.forEach((gpi, id) => {
+			if (gpi.host == host) {
+				this.gpis.delete(id);
+			}
+		});
+
+		this.gpos.forEach((gpo, id) => {
+			if (gpo.host == host) {
+				this.gpos.delete(id);
+			}
+		});
+	}
+
+	removeAddress(address) {
+		if (!this.devices.has(address)) {
+			this.removePropertiesByHost(address);
+			this.devices.delete(address);
+		}
+	}
+
+	/**
    * DeviceData:
-   *  host: address
+   *  host: String, IP address
+   *  initialize: Boolean, whether to initialize device after adding
    **/
-  async addDevice(DeviceData) {
-    let device = new Device(DeviceData);
-    this.devices.set(device.host, device);
+	addDevice(DeviceData) {
+		let device = new Device(DeviceData);
+		if (!device) return null;
 
-    device.on("connecting", _ => {
+		this.devices.set(device.host, device);
+
+		device.on("connecting", () => {
 			this.emit("connecting");
-    });
+		});
 
-    device.on("run", _ => {
+		device.on("run", () => {
 			this.emit("run");
-    });
+		});
 
-    device.on("pause", _ => {
+		device.on("pause", () => {
 			this.emit("pause");
-    });
+		});
 
-    device.on("stop", data => {
-      // data potentially being stop code. do something with data
-      this.devices.delete(device.host);
-    });
-  }
+		device.on("stop", () => {
+			this.removeAddress(device.host);
+		});
+
+		return device;
+	}
 }
 
 module.exports = Manager;

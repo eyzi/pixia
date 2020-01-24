@@ -10,14 +10,14 @@ class LwrpSocket extends EventEmitter {
 
 		this.pass = Device.pass || "";
 		this.pollInterval = Device.pollInterval || 200;
-		
+
 		this.currentRetries = Device.retries;
 		this.pollCommands = new Map();
 		this.input = [];
 
 		this.socket = Socket();
 
-		this.socket.on("connect", _ => {
+		this.socket.on("connect", () => {
 			this.login();
 			this.write("VER");
 			this.emit("connected");
@@ -40,24 +40,24 @@ class LwrpSocket extends EventEmitter {
 				let chunk = this.input.shift();
 				this.emit("data", this.parseData(chunk));
 			}
-		})
+		});
 
 		this.socket.on("error", SocketError => {
 			switch (SocketError.code) {
-				case "ECONNREFUSED":
-					this.retries = Device.retries;
+			case "ECONNREFUSED":
+				this.retries = Device.retries;
+				this.stop();
+				break;
+			default:
+				if (this.currentRetries <= 0) {
 					this.stop();
-					break;
-				default:
-					if (this.currentRetries <= 0) {
-						this.stop();
-					} else {
-						this.currentRetries--;
-						setTimeout(_ => {
-							this.socket.connect(Device.port, Device.host);
-						}, Device.reconnect);
-					}
-					break;
+				} else {
+					this.currentRetries--;
+					setTimeout(() => {
+						this.socket.connect(Device.port, Device.host);
+					}, Device.reconnect);
+				}
+				break;
 			}
 		});
 
@@ -93,63 +93,63 @@ class LwrpSocket extends EventEmitter {
 
 		let charCount=0;
 		for (let char of data) {
-				if (charCount==data.length-1) {
-						chunk+=char;
-						dataArray.push(chunk);
-				} else if (char==" " && !inQuotes) {
-						if (chunk!="") dataArray.push(chunk);
-						chunk="";
-						inQuotes=false;
-				} else if (char==`"` && inQuotes) {
-						chunk+=char;
-						if (chunk!="") dataArray.push(chunk);
-						chunk="";
-						inQuotes=false;
-				} else if (char==`"` && !inQuotes) {
-						chunk+=char;
-						inQuotes=true;
-				} else {
-						chunk+=char;
-				}
-				charCount++;
+			if (charCount==data.length-1) {
+				chunk += char;
+				dataArray.push(chunk);
+			} else if (char==" " && !inQuotes) {
+				if (chunk!="") dataArray.push(chunk);
+				chunk="";
+				inQuotes=false;
+			} else if (char=="\"" && inQuotes) {
+				chunk+=char;
+				if (chunk!="") dataArray.push(chunk);
+				chunk="";
+				inQuotes=false;
+			} else if (char=="\"" && !inQuotes) {
+				chunk+=char;
+				inQuotes=true;
+			} else {
+				chunk+=char;
+			}
+			charCount++;
 		}
 
 		parsed.array = [...dataArray];
 		parsed.VERB = dataArray.shift();
 
 		switch (parsed.VERB) {
-			case "ERROR":
-				parsed.CODE = dataArray.shift();
-				parsed.MESSAGE = dataArray.join(" ");
-				break;
+		case "ERROR":
+			parsed.CODE = dataArray.shift();
+			parsed.MESSAGE = dataArray.join(" ");
+			break;
 		}
 
 		switch (parsed.VERB) {
-			case "MTR": case "LVL":
-				parsed.TYPE = dataArray.shift();
-				break;
+		case "MTR": case "LVL":
+			parsed.TYPE = dataArray.shift();
+			break;
 		}
 
 		switch (parsed.VERB) {
-			case "LVL":
-				let chMix = dataArray.shift().split(".");
-				parsed.CHANNEL = chMix[0];
-				parsed.SIDE = chMix[1];
-				break;
-			case "MTR":
-			case "SRC": case "DST":
-			case "GPI": case "GPO":
-				parsed.CHANNEL = dataArray.shift();
-				break;
+		case "LVL":
+			let chMix = dataArray.shift().split(".");
+			parsed.CHANNEL = chMix[0];
+			parsed.SIDE = chMix[1];
+			break;
+		case "MTR":
+		case "SRC": case "DST":
+		case "GPI": case "GPO":
+			parsed.CHANNEL = dataArray.shift();
+			break;
 		}
 
 		switch (parsed.VERB) {
-			case "LVL":
-				parsed.FORM = dataArray.shift();
-				break;
-			case "GPI": case "GPO":
-				parsed.VALUE = dataArray.shift();
-				break;
+		case "LVL":
+			parsed.FORM = dataArray.shift();
+			break;
+		case "GPI": case "GPO":
+			parsed.VALUE = dataArray.shift();
+			break;
 		}
 
 		for (let property of dataArray) {
@@ -163,11 +163,11 @@ class LwrpSocket extends EventEmitter {
 	}
 
 	run() {
-		this.poller = setInterval(_=>{
+		this.poller = setInterval(() => {
 			if (this.running) {
 				this.pollCommands.forEach(pc=>{
-						this.write(pc.call());
-						pc.checkValid();
+					this.write(pc.call());
+					pc.checkValid();
 				});
 			} else {
 				clearInterval(this.poller);
@@ -194,3 +194,5 @@ class LwrpSocket extends EventEmitter {
 		if (this.socket) this.socket.write(`${ message }\r\n`);
 	}
 }
+
+module.exports = LwrpSocket;
