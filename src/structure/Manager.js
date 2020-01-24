@@ -77,21 +77,21 @@ class Manager extends EventEmitter {
 
 			socket.on("error", SocketError => {
 				switch (SocketError.code) {
-					case "ECONNREFUSED":
+				case "ECONNREFUSED":
+					resolve(false);
+					socket.destroy();
+					break;
+				default:
+					if (currentTries <= 0) {
 						resolve(false);
 						socket.destroy();
-						break;
-					default:
-						if (currentTries <= 0) {
-							resolve(false);
-							socket.destroy();
-						} else {
-							currentTries--;
-							setTimeout(() => {
-								socket.connect(port, host);
-							}, reconnectInterval);
-						}
-						break;
+					} else {
+						currentTries--;
+						setTimeout(() => {
+							socket.connect(port, host);
+						}, reconnectInterval);
+					}
+					break;
 				}
 			});
 
@@ -197,24 +197,24 @@ class Manager extends EventEmitter {
 		});
 		return srcFound;
 	}
-	
+
 	async applySource(src) {
 		this.destinations.forEach(dst => {
 			if (dst.address === src.address && !dst.source) {
 				dst.setSource(src);
 			}
-		})
+		});
 	}
 
 	handleSourceData(LwrpData) {
 		let src = this.sources.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
-		
+
 		if (src) {
 			src.update(LwrpData);
 		} else {
 			src = this.createSource(LwrpData);
 		}
-		
+
 		this.emit("sources", this.sources);
 	}
 
@@ -223,7 +223,7 @@ class Manager extends EventEmitter {
 		let src = new Source(LwrpData);
 
 		src.on("change", SourceData => {
-			this.emit("source", SourceData)
+			this.emit("source", SourceData);
 		});
 
 		src.on("subscribe", SubData => {
@@ -233,7 +233,7 @@ class Manager extends EventEmitter {
 		src.on("unsubscribe", SubData => {
 			this.emit("unsubscribe", SubData);
 		});
-		
+
 		// check if a dst is using this src rtpa
 		this.applySource(src);
 
@@ -244,13 +244,13 @@ class Manager extends EventEmitter {
 
 	handleDestinationData(LwrpData) {
 		let dst = this.destinations.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
-		
+
 		if (dst) {
 			dst.update(LwrpData);
 		} else {
 			dst = this.createDestination(LwrpData);
 		}
-		
+
 		this.emit("destinations", this.destinations);
 	}
 
@@ -261,7 +261,7 @@ class Manager extends EventEmitter {
 		dst.on("change", DestinationData => {
 			this.emit("destination", DestinationData);
 		});
-		
+
 		dst.setSource(this.getSourceByRtpa(dst.address));
 
 		this.emit("new-destination", dst);
