@@ -37,7 +37,7 @@ class Device extends EventEmitter {
 	static get STATE() {
 		return {
 			IDLE: 0,
-			INITIALIZED: 1,
+			INITIALIZING: 1,
 			CONNECTING: 2,
 			RUNNING: 3,
 			PAUSED: 4,
@@ -50,6 +50,7 @@ class Device extends EventEmitter {
 	}
 
 	async initLwrp() {
+		this.state = Device.STATE.INITIALIZING;
 		this.lwrp = new LwrpSocket(this);
 
 		this.lwrp.on("connecting", () => {
@@ -83,6 +84,14 @@ class Device extends EventEmitter {
 		});
 	}
 
+	initProperties() {
+		if (this.srcCount > 0) this.write("SRC");
+		if (this.dstCount > 0) this.write("DST");
+		// if (this.gpiCount>0) this.write("ADD GPI");
+		// if (this.gpoCount>0) this.write("ADD GPO");
+		// if (this.allowedMeter()) this.lwrp.addCommand("MTR");
+	}
+
 	allowedMeter(){
 		return this.devName !== "VX Engine" && (this.srcCount>0 || this.dstCount>0);
 	}
@@ -100,7 +109,7 @@ class Device extends EventEmitter {
 				this.dstCount = isNaN(data.NDST) ? data.NDST : Number(data.NDST);
 				this.gpiCount = isNaN(data.NGPI) ? data.NGPI : Number(data.NGPI);
 				this.gpoCount = isNaN(data.NGPO) ? data.NGPO : Number(data.NGPO);
-				this.emit("valid");
+				initProperties();
 				break;
 			case "ERROR":
 				console.log(data.raw);
@@ -113,27 +122,9 @@ class Device extends EventEmitter {
 				break;
 			case "GPI":
 				if (this.manager) this.manager.handleGpiData(data);
-				// let gpi = this.gpis.get(`${this.host}/${data.CHANNEL}`);
-				// if (!gpi) {
-				// 	gpi = this.createGpi({
-				// 		manager: this.manager,
-				// 		device: this,
-				// 		channel: data.CHANNEL
-				// 	});
-				// }
-				// gpi.update(data);
 				break;
 			case "GPO":
 				if (this.manager) this.manager.handleGpoData(data);
-				// let gpo = this.gpos.get(`${this.host}/${data.CHANNEL}`);
-				// if (!gpo) {
-				// 	gpo = this.createGpo({
-				// 		manager: this.manager,
-				// 		device: this,
-				// 		channel: data.CHANNEL
-				// 	});
-				// }
-				// gpo.update(data);
 				break;
 			case "MTR":
 				// if (data.TYPE==="ICH") {
