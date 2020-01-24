@@ -109,7 +109,8 @@ class Device extends EventEmitter {
 				this.dstCount = isNaN(data.NDST) ? data.NDST : Number(data.NDST);
 				this.gpiCount = isNaN(data.NGPI) ? data.NGPI : Number(data.NGPI);
 				this.gpoCount = isNaN(data.NGPO) ? data.NGPO : Number(data.NGPO);
-				initProperties();
+				this.initProperties();
+				this.lwrp.run();
 				break;
 			case "ERROR":
 				console.log(data.raw);

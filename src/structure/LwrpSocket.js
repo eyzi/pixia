@@ -21,8 +21,6 @@ class LwrpSocket extends EventEmitter {
 			console.info(`${Device.host} connected`);
 			this.login();
 			this.write("VER");
-			this.emit("connected");
-			this.run();
 		});
 
 		this.socket.on("data", data => {
@@ -176,7 +174,7 @@ class LwrpSocket extends EventEmitter {
 			}
 		}, this.pollInterval);
 		this.running=true;
-		this.emit("running");
+		this.emit("run");
 	}
 
 	stop() {
