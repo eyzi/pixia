@@ -2,8 +2,11 @@
 
 const dgram = require("dgram");
 const { Socket } = require("net");
-const Device = require("./Device");
 const { EventEmitter } = require("events");
+
+const Device = require("./Device");
+const Source = require("./Source");
+const Destination = require("./Destination");
 
 class Manager extends EventEmitter {
 	constructor (options = {}) {
@@ -100,7 +103,11 @@ class Manager extends EventEmitter {
 		if (this.devices.has(address)) {
 			return this.devices.get(address);
 		} else {
-			return this.addDevice({ host: address, initialize: initialize });
+			return this.addDevice({
+				host: address,
+				initialize: initialize,
+				manager: this
+			});
 		}
 	}
 
@@ -134,12 +141,15 @@ class Manager extends EventEmitter {
 	removeAddress(address) {
 		if (!this.devices.has(address)) {
 			this.removePropertiesByHost(address);
+			let device = this.devices.get(address);
+			if (device && device.lwrp) device.stop();
 			this.devices.delete(address);
 		}
 	}
 
 	/**
    * DeviceData:
+   *  manager: Manager, this manager
    *  host: String, IP address
    *  initialize: Boolean, whether to initialize device after adding
    **/
@@ -166,6 +176,54 @@ class Manager extends EventEmitter {
 		});
 
 		return device;
+	}
+
+	getSourceByRtpa(rtpa) {
+		if (!rtpa || rtpa=="" || rtpa=="0.0.0.0" || rtpa=="255.255.255.255") return null;
+
+		let srcFound = null;
+		this.sources.forEach(src => {
+			if (src.address === rtpa) srcFound = src;
+		});
+		return srcFound;
+	}
+
+	handleSourceData(data) {
+		let src = this.sources.get(`${data.device.host}/${data.CHANNEL}`);
+		if (src) {
+			src.update(data);
+		} else {
+			src = this.createSource(data);
+		}
+	}
+
+	createSource(data) {
+		data.manager = this;
+		let src = new Source(data);
+		this.sources.set(`${data.device.host}/${data.CHANNEL}`, src);
+	}
+
+	handleDestinationData(data) {
+		let dst = this.destinations.get(`${data.device.host}/${data.CHANNEL}`);
+		if (dst) {
+			dst.update(data);
+		} else {
+			dst = this.createDestination(data);
+		}
+	}
+
+	createDestination(data) {
+		data.manager = this;
+		let dst = new Destination(data);
+		this.destinations.set(`${data.device.host}/${data.CHANNEL}`, dst);
+	}
+
+	handleGpiData(data) {
+		// TODO
+	}
+
+	handleGpoData(data) {
+		// TODO
 	}
 }
 
