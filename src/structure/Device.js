@@ -110,15 +110,6 @@ class Device extends EventEmitter {
 				break;
 			case "DST":
 				if (this.manager) this.manager.handleDestinationData(data);
-				// let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
-				// if (!dst) {
-				// 	dst = this.createDestination({
-				// 		manager: this.manager,
-				// 		device: this,
-				// 		channel: data.CHANNEL
-				// 	});
-				// }
-				// dst.update(data);
 				break;
 			case "GPI":
 				if (this.manager) this.manager.handleGpiData(data);

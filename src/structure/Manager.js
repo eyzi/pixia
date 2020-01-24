@@ -188,34 +188,54 @@ class Manager extends EventEmitter {
 		return srcFound;
 	}
 
-	handleSourceData(data) {
-		let src = this.sources.get(`${data.device.host}/${data.CHANNEL}`);
+	handleSourceData(LwrpData) {
+		let src = this.sources.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
 		if (src) {
-			src.update(data);
+			src.update(LwrpData);
 		} else {
-			src = this.createSource(data);
+			src = this.createSource(LwrpData);
 		}
 	}
 
-	createSource(data) {
-		data.manager = this;
-		let src = new Source(data);
-		this.sources.set(`${data.device.host}/${data.CHANNEL}`, src);
+	createSource(LwrpData) {
+		LwrpData.manager = this;
+		let src = new Source(LwrpData);
+
+		src.on("change", SourceData => {
+			this.emit("source", SourceData)
+		});
+
+		src.on("subscribe", SubData => {
+			this.emit("subscribe", SubData);
+		});
+
+		src.on("unsubscribe", SubData => {
+			this.emit("unsubscribe", SubData);
+		});
+
+		this.emit("new-source", src);
+		this.sources.set(`${LwrpData.device.host}/${LwrpData.CHANNEL}`, src);
 	}
 
-	handleDestinationData(data) {
-		let dst = this.destinations.get(`${data.device.host}/${data.CHANNEL}`);
+	handleDestinationData(LwrpData) {
+		let dst = this.destinations.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
 		if (dst) {
-			dst.update(data);
+			dst.update(LwrpData);
 		} else {
-			dst = this.createDestination(data);
+			dst = this.createDestination(LwrpData);
 		}
 	}
 
-	createDestination(data) {
-		data.manager = this;
-		let dst = new Destination(data);
-		this.destinations.set(`${data.device.host}/${data.CHANNEL}`, dst);
+	createDestination(LwrpData) {
+		LwrpData.manager = this;
+		let dst = new Destination(LwrpData);
+
+		dst.on("change", DestinationData => {
+			this.emit("destination", DestinationData)
+		});
+
+		this.emit("new-destination", dst);
+		this.destinations.set(`${LwrpData.device.host}/${LwrpData.CHANNEL}`, dst);
 	}
 
 	handleGpiData(data) {
