@@ -172,8 +172,10 @@ class Device extends EventEmitter {
 	}
 	
 	toObject() {
-		host: this.host,
-		name: this.devName || "Axia Device"
+		return {
+			host: this.host,
+			name: this.devName || "Axia Device"
+		};
 	}
 
 	toString() {
