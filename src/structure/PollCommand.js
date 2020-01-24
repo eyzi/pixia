@@ -8,14 +8,14 @@ class PollCommand{
     }
 
     async checkValid(){
-        if (this.count && this.count<=0) {
+        if (this.count && this.count <= 0) {
             this.remove();
         }
     }
 
     call(){
-        if (this.count && this.count>0) {
-            this.count-=1;
+        if (this.count && this.count > 0) {
+            this.count -= 1;
         }
         this.checkValid();
         return this.command;
@@ -30,4 +30,4 @@ class PollCommand{
     }
 }
 
-module.exports=PollCommand;
+module.exports = PollCommand;

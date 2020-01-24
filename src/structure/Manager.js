@@ -1,189 +1,271 @@
 "use strict";
 
+const dgram = require("dgram");
+const { Socket } = require("net");
+const { EventEmitter } = require("events");
+
 const Device = require("./Device");
-const Station = require("./Station");
-const {EventEmitter} = require("events");
-const LwrpDiscovery = require("../util/LwrpDiscovery");
-
 const Source = require("./Source");
+const Destination = require("./Destination");
 
-class Manager extends EventEmitter{
-    constructor(options={}){
-        super();
-        this.init(options);
-    }
+class Manager extends EventEmitter {
+	constructor (options = {}) {
+		super();
+		this.init(options);
+	}
 
-    init(options={}) {
-        this.stations = new Map();
-        this.devices = new Map();
-        this.sources = new Map();
-        this.destinations = new Map();
-        this.gpis = new Map();
-        this.gpos = new Map();
+	init(options) {
+		if (this.devices) this.devices.clear();
+		if (this.sources) this.sources.clear();
+		if (this.destinations) this.destinations.clear();
+		if (this.gpis) this.gpis.clear();
+		if (this.gpos) this.gpos.clear();
 
-        this.initDiscovery(options.autoadd || false);
-    }
+		// option variables
+		this.lwAdAutoinit = options.lwAdAutoinit || false;
+		this.lwrpPort = options.lwrpPort || 93;
+		this.lwAdPort = options.lwAdPort || 4001;
+		this.lwAdMcast = options.lwAdMcast || "239.192.255.3";
 
-    addDevice(DeviceData){
-        return new Promise((resolve,reject)=>{
-            DeviceData.manager = this;
-            let device = new Device(DeviceData);
-            device
-                .on("valid",_=>{
-                    this.devices.set(device.host,device);
-                    this.emit("device",device);
-                    device.initProperties();
-                    resolve(device);
-                })
-                .on("invalid",_=>{
-                    this.devices.delete(device.host);
-                    device.stop();
-                    device.removeAllListeners();
-                    device = null;
-                    reject(`Invalid Device`);
-                })
-                .on("connected", _=>{
-                    this.emit("connected", device.host);
-                })
-                .on("socket-error", data=>{
-                    this.emit("socket-error", data);
-                })
-                .on("source",src=>{
-                    this.sources.set(src.toString(),src);
-                    this.handleSrc(src);
-                    this.emit("sources",this.sources);
-                })
-                .on("destination",dst=>{
-                    this.destinations.set(dst.toString(),dst);
-                    this.handleDst(dst);
-                    this.emit("destinations",this.destinations);
-                })
-                .on("gpi",data=>{
-                	this.gpis.set(data.gpio.toString(),data.gpio);
-                    this.handleGpi(data.gpio);
-                    this.emit("gpis",this.gpis);
-                })
-                .on("gpo",data=>{
-                    this.gpos.set(data.gpio.toString(),data.gpio);
-                    this.handleGpo(data.gpio);
-                    this.emit("gpos",this.gpos);
-                })
-                .on("meter",data=>{
-                    this.emit("meter",data);
-                })
-                .on("level",data=>{
-                    this.emit("level",data);
-                })
-                .on("subscribe",data=>{
-                    this.emit("subscribe",data);
-                })
-                .on("unsubscribe",data=>{
-                    this.emit("unsubscribe",data);
-                });
-        });
-    }
+		// instance variables
+		this.devices = new Map(); // some devices, especially discovered, will not be initialized. run device.initialize() to start them
+		this.sources = new Map();
+		this.destinations = new Map();
+		this.gpis = new Map();
+		this.gpos = new Map();
+	}
 
-    addStation(StationData){
-        StationData.manager = this;
+	initDiscovery() {
+		this.socket = dgram.createSocket({
+			type: "udp4",
+			reuseAddr: true
+		});
 
-        let stn = new Station(StationData);
-        if (stn) {
-            this.stations.set(stn.name,stn);
-        }
+		this.socket
+			.on("listening",()=>{
+				this.emit("lwAdListening");
+			})
+			.on("message", (data,rinfo) => {
+				this.addAddress(rinfo.address, this.lwAdAutoinit);
+			})
+			.on("error", err => {
+				this.emit("lwAdError", err);
+			});
 
-        return stn;
-    }
+		this.socket.bind(this.lwAdPort, () => {
+			this.socket.addMembership(this.lwAdMcast);
+			this.emit("lwAdReady");
+		});
+	}
 
-    getSource(rtpa){
-        if (!rtpa || rtpa=="" || rtpa=="0.0.0.0" || rtpa=="255.255.255.255") return null;
+	validAddress(options = {}) {
+		let host = options.host;
+		let port = options.port || 93;
+		let retries = options.retries || 3;
+		let reconnectInterval = options.reconnectInterval || 3000;
 
-        let srcFound = null;
-        this.sources.forEach(src=>{
-            if (src.address==rtpa) srcFound=src;
-        });
-        return srcFound;
-    }
+		return new Promise((resolve, reject) => {
+			if (!host) reject("Need host to check address");
 
-    handleDst(dst) {
-        this.emit("destination",dst);
+			let socket = Socket();
+			let currentTries = retries;
 
-        this.stations.forEach(stn=>{
-            stn.updateDestination(dst);
-        });
-    }
+			socket.on("connect", () => {
+				resolve(true);
+				socket.destroy();
+			});
 
-    handleSrc(src) {
-        this.destinations.forEach(dst=>{
-            if (!dst.source && dst.address) {
-                let src = this.getSource(dst.address);
-                if (src) dst.setSource(src);
-            }
-        });
+			socket.on("error", SocketError => {
+				switch (SocketError.code) {
+				case "ECONNREFUSED":
+					resolve(false);
+					socket.destroy();
+					break;
+				default:
+					if (currentTries <= 0) {
+						resolve(false);
+						socket.destroy();
+					} else {
+						currentTries--;
+						setTimeout(() => {
+							socket.connect(host, port);
+						}, reconnectInterval);
+					}
+					break;
+				}
+			});
 
-        this.emit("source",src);
+			socket.connect(host, port);
+		});
+	}
 
-        this.stations.forEach(stn=>{
-            stn.updateSource(src);
-        });
-    }
+	addAddress(address, initialize = true) {
+		if (this.devices.has(address)) {
+			return this.devices.get(address);
+		} else {
+			return this.addDevice({
+				host: address,
+				initialize: initialize,
+				manager: this
+			});
+		}
+	}
 
-    handleGpi(gpi) {
-        this.emit("gpi",gpi);
+	async removePropertiesByHost(host) {
+		// remove properties tied with this address
+		this.sources.forEach((source, id) => {
+			if (source.host == host) {
+				this.sources.delete(id);
+			}
+		});
 
-        this.stations.forEach(stn=>{
-            stn.updateGpi(gpi);
-        });
-    }
+		this.destinations.forEach((destination, id) => {
+			if (destination.host == host) {
+				this.destinations.delete(id);
+			}
+		});
 
-    handleGpo(gpo) {
-        this.emit("gpo",gpo);
+		this.gpis.forEach((gpi, id) => {
+			if (gpi.host == host) {
+				this.gpis.delete(id);
+			}
+		});
 
-        this.stations.forEach(stn=>{
-            stn.updateGpo(gpo);
-        });
-    }
+		this.gpos.forEach((gpo, id) => {
+			if (gpo.host == host) {
+				this.gpos.delete(id);
+			}
+		});
+	}
 
-    addAddress(address){
-        if (!this.discovery) return Promise.reject();
-        this.discovery.addAddress(address);
-        return this.addDevice({host:address});
-    }
+	removeAddress(address) {
+		if (this.devices.has(address)) {
+			this.removePropertiesByHost(address);
+			let device = this.devices.get(address);
+			if (device && device.lwrp) device.stop();
+			this.devices.delete(address);
+		}
+	}
 
-    removeAddress(address){
-        let d = this.devices.get(address)
-        if (d) {
-            d.stop()
-            d.removeAllListeners()
-        }
-        this.devices.delete(address)
-        if (this.discovery) this.discovery.removeAddress(address);
-    }
+	/**
+   * DeviceData:
+   *  manager: Manager, this manager
+   *  host: String, IP address
+   *  initialize: Boolean, whether to initialize device after adding
+   **/
+	addDevice(DeviceData) {
+		let device = new Device(DeviceData);
+		if (!device) return null;
 
-    removeAddress(address){
-        if (this.discovery) this.discovery.addAddress(address);
-        let device = this.devices.get(address);
-        if (device) device.stop();
-        this.devices.delete(address);
-    }
+		this.devices.set(device.host, device);
 
-    initDiscovery(autoadd=false){
-        this.discovery = new LwrpDiscovery(autoadd);
+		device.on("connecting", () => {
+			this.emit("connecting");
+		});
 
-        this.discovery
-            // .on("address",address=>{
-            //     // add a as device. device returns an object if successfully connected or null if not
-            //     this.addDevice({host:address}).catch(console.error);
-            // })
-            .on("ready",_=>{
-                console.log(`LWRP Discovery is ready`);
-            })
-            .on("listening",_=>{
-                console.log(`LWRP Discovery is listening`);
-            })
-            .on("error",error=>{
-                console.error(error);
-            });
-    }
+		device.on("run", () => {
+			this.emit("run");
+		});
+
+		device.on("pause", () => {
+			this.emit("pause");
+		});
+
+		device.on("stop", () => {
+			this.removeAddress(device.host);
+		});
+
+		return device;
+	}
+
+	getSourceByRtpa(rtpa) {
+		if (!rtpa || rtpa=="" || rtpa=="0.0.0.0" || rtpa=="255.255.255.255") return null;
+
+		let srcFound = null;
+		this.sources.forEach(src => {
+			if (src.address === rtpa) srcFound = src;
+		});
+		return srcFound;
+	}
+	
+	async applySource(src) {
+		this.destinations.forEach(dst => {
+			if (dst.address === src.address && !dst.source) {
+				dst.setSource(src);
+			}
+		})
+	}
+
+	handleSourceData(LwrpData) {
+		let src = this.sources.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
+		
+		if (src) {
+			src.update(LwrpData);
+		} else {
+			src = this.createSource(LwrpData);
+		}
+		
+		this.emit("sources", this.sources);
+	}
+
+	createSource(LwrpData) {
+		LwrpData.manager = this;
+		let src = new Source(LwrpData);
+
+		src.on("change", SourceData => {
+			this.emit("source", SourceData)
+		});
+
+		src.on("subscribe", SubData => {
+			this.emit("subscribe", SubData);
+		});
+
+		src.on("unsubscribe", SubData => {
+			this.emit("unsubscribe", SubData);
+		});
+		
+		// check if a dst is using this src rtpa
+		this.applySource(src);
+
+		this.emit("new-source", src);
+		this.sources.set(`${LwrpData.device.host}/${LwrpData.CHANNEL}`, src);
+		return src;
+	}
+
+	handleDestinationData(LwrpData) {
+		let dst = this.destinations.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
+		
+		if (dst) {
+			dst.update(LwrpData);
+		} else {
+			dst = this.createDestination(LwrpData);
+		}
+		
+		this.emit("destinations", this.destinations);
+	}
+
+	createDestination(LwrpData) {
+		LwrpData.manager = this;
+		let dst = new Destination(LwrpData);
+
+		dst.on("change", DestinationData => {
+			this.emit("destination", DestinationData)
+		});
+		
+		dst.setSource(this.getSourceByRtpa(dst.address));
+
+		this.emit("new-destination", dst);
+		this.destinations.set(`${LwrpData.device.host}/${LwrpData.CHANNEL}`, dst);
+		return dst;
+	}
+
+	handleGpiData(data) {
+		// TODO
+	}
+
+	handleGpoData(data) {
+		// TODO
+	}
 }
 
 module.exports = Manager;

@@ -1,215 +1,184 @@
 "use strict";
 
-const Gpi = require("./Gpi");
-const Gpo = require("./Gpo");
-const Source = require("./Source");
-const {EventEmitter} = require("events");
-const Destination = require("./Destination");
-const LwrpSocket = require("../util/LwrpSocket");
+const { EventEmitter } = require("events");
+const LwrpSocket = require("./LwrpSocket");
 
-class Device extends EventEmitter{
-    constructor(DeviceData){
-        if (!DeviceData.host) return null;
+class Device extends EventEmitter {
+	constructor(DeviceData = {}) {
+		super();
 
-        super();
+		this.manager = DeviceData.manager;
+		this.host = DeviceData.host || "127.0.0.1";
+		this.port = DeviceData.port || 93;
+		this.pass = DeviceData.pass || "";
 
-        this.manager = DeviceData.manager;
-        this.host = DeviceData.host;
-        this.name = DeviceData.name || "Axia Device";
-        this.port = DeviceData.port || 93;
-        this.pass = DeviceData.pass || "";
+		this.state = Device.STATE.IDLE;
 
-        this.srcCount = null;
-        this.dstCount = null;
-        this.gpiCount = null;
-        this.gpoCount = null;
+		// lwrp variables
+		this.reconnect = DeviceData.reconnect || 1000;
+		this.socketRetries = DeviceData.socketRetries || 3;
+		this.pollInterval = DeviceData.pollInterval || 200;
 
-        this.sources = new Map();
-        this.destinations = new Map();
-        this.gpis = new Map();
-        this.gpos = new Map();
+		this.srcCount = null;
+		this.dstCount = null;
+		this.gpiCount = null;
+		this.gpoCount = null;
 
-        this.initLwrp();
-    }
+		this.sources = new Map();
+		this.destinations = new Map();
+		this.gpis = new Map();
+		this.gpos = new Map();
 
-    initLwrp(){
-        this.lwrp = new LwrpSocket({
-            host: this.host,
-            name: this.name,
-            port: this.port,
-            pass: this.pass,
-            reconnect: 5000,
-            pollInterval: 200
-        });
+		if (DeviceData.initialize) {
+			this.initLwrp();
+		}
+	}
 
-        this.lwrp
-            .on("invalid",_=>{
-                this.emit("invalid");
-            })
-            .on("connected", _=>{
-                this.emit("connected");
-            })
-            .on("socket-error", data=>{
-                this.emit("socket-error", data);
-            })
-            .on("data",data=>{
-                this.handleData(data);
-            })
-            .on("error",error=>{
-                console.error(`[ERROR] ${this.host}: ${error.code}`);
-            });
-    }
+	static get STATE() {
+		return {
+			IDLE: 0,
+			INITIALIZING: 1,
+			CONNECTING: 2,
+			RUNNING: 3,
+			PAUSED: 4,
+			ERRORED: 5,
+			READY: 6
+		};
+	}
 
-    allowedMeter(){
-        return this.devName!=="VX Engine" && (this.srcCount>0 || this.dstCount>0);
-    }
+	initialize() {
+		this.initLwrp();
+	}
 
-    initProperties(){
-        if (this.srcCount>0) this.write("SRC");
-        if (this.dstCount>0) this.write("DST");
-        if (this.gpiCount>0) this.write("ADD GPI");
-        if (this.gpoCount>0) this.write("ADD GPO");
-        if (this.allowedMeter()) this.lwrp.addCommand("MTR");
-    }
+	async initLwrp() {
+		this.state = Device.STATE.INITIALIZING;
+		this.lwrp = new LwrpSocket(this);
 
-    createSource(AudioStreamData){
-        let src = new Source(AudioStreamData);
-        src.on("change",_=>{
-            this.emit("source",src);
-        });
-        src.on("subscribe",data=>{
-            this.emit("subscribe",data);
-        });
-        src.on("unsubscribe",data=>{
-            this.emit("unsubscribe",data);
-        });
-        this.sources.set(src.toString(),src);
-        return src;
-    }
+		this.lwrp.on("connecting", () => {
+			this.state = Device.STATE.CONNECTING;
+			this.emit("connecting");
+		});
 
-    createDestination(AudioStreamData){
-        let dst = new Destination(AudioStreamData);
-        dst.on("change",_=>{
-            this.emit("destination",dst);
-        });
-        this.destinations.set(dst.toString(),dst);
-        return dst;
-    }
+		this.lwrp.on("error", data => {
+			this.state = Device.STATE.ERRORED;
+			data.device = this.device;
+			this.emit("error", data);
+		});
 
-    createGpi(GpioData){
-        let gpi = new Gpi(GpioData);
-        gpi.on("change",GpioInfo=>{
-            this.emit("gpi",GpioInfo);
-        });
-        this.gpis.set(gpi.toString(),gpi);
-        return gpi;
-    }
+		this.lwrp.on("data", data => {
+			this.handleData(data);
+		});
 
-    createGpo(GpioData){
-        let gpo = new Gpo(GpioData);
-        gpo.on("change",GpioInfo=>{
-            this.emit("gpo",GpioInfo);
-        });
-        this.gpos.set(gpo.toString(),gpo);
-        return gpo;
-    }
+		this.lwrp.on("run", () => {
+			this.state = Device.STATE.RUNNING;
+			this.emit("run");
+		});
 
-    async handleData(data={}){
-        if (!data) return;
+		this.lwrp.on("pause", () => {
+			this.state = Device.STATE.PAUSED;
+			this.emit("pause");
+		});
 
-        switch (data.VERB) {
-            case "VER":
-                this.version = data.LWRP;
-                this.devName = data.DEVN;
-                this.srcCount = isNaN(data.NSRC) ? data.NSRC : Number(data.NSRC);
-                this.dstCount = isNaN(data.NDST) ? data.NDST : Number(data.NDST);
-                this.gpiCount = isNaN(data.NGPI) ? data.NGPI : Number(data.NGPI);
-                this.gpoCount = isNaN(data.NGPO) ? data.NGPO : Number(data.NGPO);
-                this.emit("valid");
-                break;
-            case "ERROR":
-                console.log(data.raw);
-                break;
-            case "SRC":
-                let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
-                if (!src) {
-                    src = this.createSource({
-                        manager: this.manager,
-                        device: this,
-                        channel: data.CHANNEL
-                    });
-                }
-                src.update(data);
-                break;
-            case "DST":
-                let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
-                if (!dst) {
-                    dst = this.createDestination({
-                        manager: this.manager,
-                        device: this,
-                        channel: data.CHANNEL
-                    });
-                }
-                dst.update(data);
-                break;
-            case "GPI":
-                let gpi = this.gpis.get(`${this.host}/${data.CHANNEL}`);
-                if (!gpi) {
-                    gpi = this.createGpi({
-                        manager: this.manager,
-                        device: this,
-                        channel: data.CHANNEL
-                    });
-                }
-                gpi.update(data);
-                break;
-            case "GPO":
-                let gpo = this.gpos.get(`${this.host}/${data.CHANNEL}`);
-                if (!gpo) {
-                    gpo = this.createGpo({
-                        manager: this.manager,
-                        device: this,
-                        channel: data.CHANNEL
-                    });
-                }
-                gpo.update(data);
-                break;
-            case "MTR":
-                if (data.TYPE==="ICH") {
-                    let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
-                    if (src) src.setMeter(data);
-                } else if (data.TYPE==="OCH") {
-                    let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
-                    if (dst) dst.setMeter(data);
-                }
-                break;
-            case "LVL":
-                if (data.TYPE==="ICH") {
-                    let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
-                    if (src) src.setLevelInfo(data.FORM,data.SIDE);
-                } else if (data.TYPE==="OCH") {
-                    let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
-                    if (dst) dst.setLevelInfo(data.FORM,data.SIDE);
-                }
-                this.emit('level', {
-                    type: data.TYPE,
-                    key: `${this.host}/${data.CHANNEL}`,
-                    device: this.host,
-                    channel: data.CHANNEL,
-                    side: data.SIDE,
-                    form: data.FORM
-                })
-                break;
-        }
-    }
+		this.lwrp.on("stop", () => {
+			this.lwrp = null;
+			this.emit("stop");
+		});
+	}
 
-    stop(){
-        this.lwrp.stop();
-    }
+	initProperties() {
+		if (this.srcCount > 0) this.write("SRC");
+		if (this.dstCount > 0) this.write("DST");
+		// if (this.gpiCount>0) this.write("ADD GPI");
+		// if (this.gpoCount>0) this.write("ADD GPO");
+		// if (this.allowedMeter()) this.lwrp.addCommand("MTR");
+	}
 
-    write(message){
-        this.lwrp.write(message);
-    }
+	allowedMeter(){
+		return this.devName !== "VX Engine" && (this.srcCount>0 || this.dstCount>0);
+	}
+
+	async handleData(data={}){
+		if (!data) return;
+
+		data.device = this;
+
+		switch (data.VERB) {
+			case "VER":
+				this.state = Device.STATE.READY;
+				this.version = data.LWRP;
+				this.devName = data.DEVN;
+				this.srcCount = isNaN(data.NSRC) ? data.NSRC : Number(data.NSRC);
+				this.dstCount = isNaN(data.NDST) ? data.NDST : Number(data.NDST);
+				this.gpiCount = isNaN(data.NGPI) ? data.NGPI : Number(data.NGPI);
+				this.gpoCount = isNaN(data.NGPO) ? data.NGPO : Number(data.NGPO);
+				this.initProperties();
+				this.lwrp.run();
+				break;
+			case "ERROR":
+				console.log(data.raw);
+				break;
+			case "SRC":
+				if (this.manager) this.manager.handleSourceData(data);
+				break;
+			case "DST":
+				if (this.manager) this.manager.handleDestinationData(data);
+				break;
+			case "GPI":
+				if (this.manager) this.manager.handleGpiData(data);
+				break;
+			case "GPO":
+				if (this.manager) this.manager.handleGpoData(data);
+				break;
+			case "MTR":
+				// if (data.TYPE==="ICH") {
+				// 	let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
+				// 	if (src) src.setMeter(data);
+				// } else if (data.TYPE==="OCH") {
+				// 	let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
+				// 	if (dst) dst.setMeter(data);
+				// }
+				break;
+			case "LVL":
+				// if (data.TYPE==="ICH") {
+				// 	let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
+				// 	if (src) src.setLevelInfo(data.FORM,data.SIDE);
+				// } else if (data.TYPE==="OCH") {
+				// 	let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
+				// 	if (dst) dst.setLevelInfo(data.FORM,data.SIDE);
+				// }
+				// this.emit("level", {
+				// 	type: data.TYPE,
+				// 	key: `${this.host}/${data.CHANNEL}`,
+				// 	device: this.host,
+				// 	channel: data.CHANNEL,
+				// 	side: data.SIDE,
+				// 	form: data.FORM
+				// });
+				break;
+		}
+	}
+
+	stop() {
+		this.lwrp.stop();
+	}
+
+	write(message){
+		if (
+			[
+				Device.STATE.RUNNING,
+				Device.STATE.READY
+			].includes(this.state)
+		) this.lwrp.write(message);
+	}
+	
+	toObject() {
+		host: this.host,
+		name: this.devName || "Axia Device"
+	}
+
+	toString() {
+		return this.host;
+	}
 }
 
 module.exports = Device;
