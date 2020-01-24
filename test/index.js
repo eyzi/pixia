@@ -1,9 +1,20 @@
 "use strict";
 
-const Pixia = require("..");
-let manager = new Pixia();
-
-[
+const a1 = [
+  "172.16.16.114"
+];
+const a10 = [
+  "172.16.16.101",
+  "172.16.16.102",
+  "172.16.16.103",
+  "172.16.16.104",
+  "172.16.16.106",
+  "172.16.16.107",
+  "172.16.16.108",
+  "172.16.16.109",
+  "172.16.16.110"
+];
+const a40 = [
   "172.16.16.101",
   "172.16.16.102",
   "172.16.16.103",
@@ -42,6 +53,28 @@ let manager = new Pixia();
   "172.16.16.137",
   "172.16.16.138",
   "172.16.16.139",
-].forEach(address => {
+];
+
+const Pixia = require("..");
+let manager = new Pixia();
+
+manager.on("new-source", src => {
+	console.log(`SRC create: ${src.name}`);
+});
+
+manager.on("source", src => {
+	console.log(`SRC change: ${src.name}`);
+});
+
+manager.on("new-destination", dst => {
+	console.log(`DST create: ${dst.name}`);
+});
+
+manager.on("destination", dst => {
+	console.log(`DST change: ${dst.name}`);
+});
+
+
+a40.forEach(address => {
   let d = manager.addAddress(address);
 });

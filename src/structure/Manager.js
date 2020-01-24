@@ -139,7 +139,7 @@ class Manager extends EventEmitter {
 	}
 
 	removeAddress(address) {
-		if (!this.devices.has(address)) {
+		if (this.devices.has(address)) {
 			this.removePropertiesByHost(address);
 			let device = this.devices.get(address);
 			if (device && device.lwrp) device.stop();
@@ -187,14 +187,25 @@ class Manager extends EventEmitter {
 		});
 		return srcFound;
 	}
+	
+	async applySource(src) {
+		this.destinations.forEach(dst => {
+			if (dst.address === src.address && !dst.source) {
+				dst.setSource(src);
+			}
+		})
+	}
 
 	handleSourceData(LwrpData) {
 		let src = this.sources.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
+		
 		if (src) {
 			src.update(LwrpData);
 		} else {
 			src = this.createSource(LwrpData);
 		}
+		
+		this.emit("sources", this.sources);
 	}
 
 	createSource(LwrpData) {
@@ -212,18 +223,25 @@ class Manager extends EventEmitter {
 		src.on("unsubscribe", SubData => {
 			this.emit("unsubscribe", SubData);
 		});
+		
+		// check if a dst is using this src rtpa
+		this.applySource(src);
 
 		this.emit("new-source", src);
 		this.sources.set(`${LwrpData.device.host}/${LwrpData.CHANNEL}`, src);
+		return src;
 	}
 
 	handleDestinationData(LwrpData) {
 		let dst = this.destinations.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
+		
 		if (dst) {
 			dst.update(LwrpData);
 		} else {
 			dst = this.createDestination(LwrpData);
 		}
+		
+		this.emit("destinations", this.destinations);
 	}
 
 	createDestination(LwrpData) {
@@ -233,9 +251,12 @@ class Manager extends EventEmitter {
 		dst.on("change", DestinationData => {
 			this.emit("destination", DestinationData)
 		});
+		
+		dst.setSource(this.getSourceByRtpa(dst.address));
 
 		this.emit("new-destination", dst);
 		this.destinations.set(`${LwrpData.device.host}/${LwrpData.CHANNEL}`, dst);
+		return dst;
 	}
 
 	handleGpiData(data) {

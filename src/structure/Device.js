@@ -41,7 +41,8 @@ class Device extends EventEmitter {
 			CONNECTING: 2,
 			RUNNING: 3,
 			PAUSED: 4,
-			ERRORED: 5
+			ERRORED: 5,
+			READY: 6
 		};
 	}
 
@@ -103,6 +104,7 @@ class Device extends EventEmitter {
 
 		switch (data.VERB) {
 			case "VER":
+				this.state = Device.STATE.READY;
 				this.version = data.LWRP;
 				this.devName = data.DEVN;
 				this.srcCount = isNaN(data.NSRC) ? data.NSRC : Number(data.NSRC);
@@ -161,7 +163,17 @@ class Device extends EventEmitter {
 	}
 
 	write(message){
-		if (this.state == Device.STATE.RUNNING) this.lwrp.write(message);
+		if (
+			[
+				Device.STATE.RUNNING,
+				Device.STATE.READY
+			].includes(this.state)
+		) this.lwrp.write(message);
+	}
+	
+	toObject() {
+		host: this.host,
+		name: this.devName || "Axia Device"
 	}
 
 	toString() {

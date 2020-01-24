@@ -7,7 +7,10 @@ class Destination extends AudioStream {
   constructor(data) {
     data.streamType = "SRC";
     super(data);
-
+	
+	this.name = data.NAME;
+	let parsedAddr = data.ADDR.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i);
+	this.address = parsedAddr ? parsedAddr[0] : null;
     this.source = null;
   }
 

@@ -7,6 +7,8 @@ class Source extends AudioStream {
     data.streamType = "SRC";
     super(data);
 
+	this.name = data.PSNM;
+	this.address = data.RTPA;
     this.subscribers = new Map();
   }
 
@@ -35,3 +37,5 @@ class Source extends AudioStream {
     this.subscribers.delete(dst.toString());
   }
 }
+
+module.exports = Source;
