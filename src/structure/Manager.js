@@ -184,7 +184,7 @@ class Manager extends EventEmitter {
 		return device;
 	}
 
-	dSTATE() {
+	get dSTATE() {
 		return Device.STATE;
 	}
 
