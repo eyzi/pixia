@@ -158,6 +158,7 @@ class Manager extends EventEmitter {
 		if (!device) return null;
 
 		this.devices.set(device.host, device);
+		this.emit("devices", this.devices);
 
 		device.on("connecting", () => {
 			this.emit("connecting");
