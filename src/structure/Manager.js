@@ -77,25 +77,25 @@ class Manager extends EventEmitter {
 
 			socket.on("error", SocketError => {
 				switch (SocketError.code) {
-				case "ECONNREFUSED":
-					resolve(false);
-					socket.destroy();
-					break;
-				default:
-					if (currentTries <= 0) {
+					case "ECONNREFUSED":
 						resolve(false);
 						socket.destroy();
-					} else {
-						currentTries--;
-						setTimeout(() => {
-							socket.connect(host, port);
-						}, reconnectInterval);
-					}
-					break;
+						break;
+					default:
+						if (currentTries <= 0) {
+							resolve(false);
+							socket.destroy();
+						} else {
+							currentTries--;
+							setTimeout(() => {
+								socket.connect(port, host);
+							}, reconnectInterval);
+						}
+						break;
 				}
 			});
 
-			socket.connect(host, port);
+			socket.connect(port, host);
 		});
 	}
 
