@@ -62,7 +62,7 @@ class Manager extends EventEmitter {
 		let host = options.host;
 		let port = options.port || 93;
 		let retries = options.retries || 3;
-		let reconnectInterval = options.reconnectInterval || 3000;
+		let reconnectInterval = options.reconnectInterval || 1000;
 
 		return new Promise((resolve, reject) => {
 			if (!host) reject("Need host to check address");
