@@ -44,20 +44,20 @@ class LwrpSocket extends EventEmitter {
 		this.socket.on("error", SocketError => {
 			this.emit("error", SocketError);
 			switch (SocketError.code) {
-				case "ECONNREFUSED":
-					this.retries = Device.retries;
+			case "ECONNREFUSED":
+				this.retries = Device.retries;
+				this.stop();
+				break;
+			default:
+				if (this.currentRetries <= 0) {
 					this.stop();
-					break;
-				default:
-					if (this.currentRetries <= 0) {
-						this.stop();
-					} else {
-						this.currentRetries--;
-						setTimeout(() => {
-							this.socket.connect(Device.port, Device.host);
-						}, Device.reconnect);
-					}
-					break;
+				} else {
+					this.currentRetries--;
+					setTimeout(() => {
+						this.socket.connect(Device.port, Device.host);
+					}, Device.reconnect);
+				}
+				break;
 			}
 		});
 
@@ -118,38 +118,38 @@ class LwrpSocket extends EventEmitter {
 		parsed.VERB = dataArray.shift();
 
 		switch (parsed.VERB) {
-			case "ERROR":
-				parsed.CODE = dataArray.shift();
-				parsed.MESSAGE = dataArray.join(" ");
-				break;
+		case "ERROR":
+			parsed.CODE = dataArray.shift();
+			parsed.MESSAGE = dataArray.join(" ");
+			break;
 		}
 
 		switch (parsed.VERB) {
-			case "MTR": case "LVL":
-				parsed.TYPE = dataArray.shift();
-				break;
+		case "MTR": case "LVL":
+			parsed.TYPE = dataArray.shift();
+			break;
 		}
 
 		switch (parsed.VERB) {
-			case "LVL":
-				let chMix = dataArray.shift().split(".");
-				parsed.CHANNEL = chMix[0];
-				parsed.SIDE = chMix[1];
-				break;
-			case "MTR":
-			case "SRC": case "DST":
-			case "GPI": case "GPO":
-				parsed.CHANNEL = dataArray.shift();
-				break;
+		case "LVL":
+			let chMix = dataArray.shift().split(".");
+			parsed.CHANNEL = chMix[0];
+			parsed.SIDE = chMix[1];
+			break;
+		case "MTR":
+		case "SRC": case "DST":
+		case "GPI": case "GPO":
+			parsed.CHANNEL = dataArray.shift();
+			break;
 		}
 
 		switch (parsed.VERB) {
-			case "LVL":
-				parsed.FORM = dataArray.shift();
-				break;
-			case "GPI": case "GPO":
-				parsed.VALUE = dataArray.shift();
-				break;
+		case "LVL":
+			parsed.FORM = dataArray.shift();
+			break;
+		case "GPI": case "GPO":
+			parsed.VALUE = dataArray.shift();
+			break;
 		}
 
 		for (let property of dataArray) {

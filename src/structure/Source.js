@@ -3,49 +3,49 @@
 const AudioStream = require("./AudioStream");
 
 class Source extends AudioStream {
-  constructor(data) {
-    data.streamType = "SRC";
-    super(data);
+	constructor(LwrpData) {
+		LwrpData.streamType = "SRC";
+		super(LwrpData);
 
-	this.name = data.PSNM;
-	this.address = data.RTPA;
-    this.subscribers = new Map();
-  }
+		this.name = LwrpData.PSNM;
+		this.address = LwrpData.RTPA;
+		this.subscribers = new Map();
+	}
 
-  async update(data) {
-    let changed = false;
+	async update(LwrpData) {
+		let changed = false;
 
-    if (this.name !== data.PSNM) {
-      this.name = data.PSNM;
-      changed = true;
-    }
+		if (this.name !== LwrpData.PSNM) {
+			this.name = LwrpData.PSNM;
+			changed = true;
+		}
 
-    if (this.address !== data.RTPA) {
-      this.address = data.RTPA;
-      changed = true;
-    }
+		if (this.address !== LwrpData.RTPA) {
+			this.address = LwrpData.RTPA;
+			changed = true;
+		}
 
-    if (changed) {
-      // emit change
-      this.emit("change", this);
-    }
-  }
+		if (changed) {
+			// emit change
+			this.emit("change", this);
+		}
+	}
 
-  subscribe(dst) {
-    this.emit("subscribe", {
-      src: this,
-      dst: dst
-    });
-    this.subscribers.set(dst.toString(), dst);
-  }
+	subscribe(dst) {
+		this.emit("subscribe", {
+			src: this,
+			dst: dst
+		});
+		this.subscribers.set(dst.toString(), dst);
+	}
 
-  unsubscribe(dst) {
-    this.emit("unsubscribe", {
-      src: this,
-      dst: dst
-    });
-    this.subscribers.delete(dst.toString());
-  }
+	unsubscribe(dst) {
+		this.emit("unsubscribe", {
+			src: this,
+			dst: dst
+		});
+		this.subscribers.delete(dst.toString());
+	}
 }
 
 module.exports = Source;

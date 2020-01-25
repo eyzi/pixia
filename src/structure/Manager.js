@@ -77,21 +77,21 @@ class Manager extends EventEmitter {
 
 			socket.on("error", SocketError => {
 				switch (SocketError.code) {
-				case "ECONNREFUSED":
-					resolve(false);
-					socket.destroy();
-					break;
-				default:
-					if (currentTries <= 0) {
+					case "ECONNREFUSED":
 						resolve(false);
 						socket.destroy();
-					} else {
-						currentTries--;
-						setTimeout(() => {
-							socket.connect(port, host);
-						}, reconnectInterval);
-					}
-					break;
+						break;
+					default:
+						if (currentTries <= 0) {
+							resolve(false);
+							socket.destroy();
+						} else {
+							currentTries--;
+							setTimeout(() => {
+								socket.connect(port, host);
+							}, reconnectInterval);
+						}
+						break;
 				}
 			});
 
@@ -206,18 +206,6 @@ class Manager extends EventEmitter {
 		});
 	}
 
-	handleSourceData(LwrpData) {
-		let src = this.sources.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
-
-		if (src) {
-			src.update(LwrpData);
-		} else {
-			src = this.createSource(LwrpData);
-		}
-
-		this.emit("sources", this.sources);
-	}
-
 	createSource(LwrpData) {
 		LwrpData.manager = this;
 		let src = new Source(LwrpData);
@@ -238,8 +226,93 @@ class Manager extends EventEmitter {
 		this.applySource(src);
 
 		this.emit("new-source", src);
-		this.sources.set(`${LwrpData.device.host}/${LwrpData.CHANNEL}`, src);
+		this.sources.set(src.key, src);
 		return src;
+	}
+
+	createDestination(LwrpData) {
+		LwrpData.manager = this;
+		let dst = new Destination(LwrpData);
+
+		dst.on("change", DestinationData => {
+			this.emit("destination", DestinationData);
+		});
+
+		dst.setSource(this.getSourceByRtpa(dst.address));
+
+		this.emit("new-destination", dst);
+		this.destinations.set(dst.key, dst);
+		return dst;
+	}
+
+	createGpi(LwrpData) {
+		LwrpData.manager = this;
+		let gpi = new Gpi(LwrpData);
+
+		gpi.on("change", GpiData => {
+			this.emit("gpi", GpiData);
+		});
+
+		gpi.on("going-low", GpiData => {
+			this.emit("going-low", GpiData);
+		});
+
+		gpi.on("going-high", GpiData => {
+			this.emit("going-high", GpiData);
+		});
+
+		gpi.on("low", GpiData => {
+			this.emit("low", GpiData);
+		});
+
+		gpi.on("high", GpiData => {
+			this.emit("high", GpiData);
+		});
+
+		this.emit("new-gpi", gpi);
+		this.gpis.set(gpi.key, gpi);
+		return gpi;
+	}
+
+	createGpo(LwrpData) {
+		LwrpData.manager = this;
+		let gpo = new Gpo(LwrpData);
+
+		gpo.on("change", GpoData => {
+			this.emit("gpo", GpoData);
+		});
+
+		gpo.on("going-low", GpoData => {
+			this.emit("going-low", GpoData);
+		});
+
+		gpo.on("going-high", GpoData => {
+			this.emit("going-high", GpoData);
+		});
+
+		gpo.on("low", GpoData => {
+			this.emit("low", GpoData);
+		});
+
+		gpo.on("high", GpoData => {
+			this.emit("high", GpoData);
+		});
+
+		this.emit("new-gpo", gpo);
+		this.gpos.set(gpo.key, gpo);
+		return gpo;
+	}
+
+	handleSourceData(LwrpData) {
+		let src = this.sources.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
+
+		if (src) {
+			src.update(LwrpData);
+		} else {
+			src = this.createSource(LwrpData);
+		}
+
+		this.emit("sources", this.sources);
 	}
 
 	handleDestinationData(LwrpData) {
@@ -254,27 +327,34 @@ class Manager extends EventEmitter {
 		this.emit("destinations", this.destinations);
 	}
 
-	createDestination(LwrpData) {
-		LwrpData.manager = this;
-		let dst = new Destination(LwrpData);
+	handleGpiData(LwrpData) {
+		for (let i = 1; i <= LwrpData.VALUE.length; i++) {
+			LwrpData.PIN = i;
+			let gpi = this.gpis.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}-${LwrpData.PIN}`);
 
-		dst.on("change", DestinationData => {
-			this.emit("destination", DestinationData);
-		});
+			if (gpi) {
+				gpi.update(LwrpData);
+			} else {
+				gpi = this.createGpi(LwrpData);
+			}
 
-		dst.setSource(this.getSourceByRtpa(dst.address));
-
-		this.emit("new-destination", dst);
-		this.destinations.set(`${LwrpData.device.host}/${LwrpData.CHANNEL}`, dst);
-		return dst;
+			this.emit("gpis", this.gpis);
+		}
 	}
 
-	handleGpiData(data) {
-		// TODO
-	}
+	handleGpoData(LwrpData) {
+		for (let i = 1; i <= LwrpData.VALUE.length; i++) {
+			LwrpData.PIN = i;
+			let gpo = this.gpos.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}-${LwrpData.PIN}`);
 
-	handleGpoData(data) {
-		// TODO
+			if (gpo) {
+				gpo.update(LwrpData);
+			} else {
+				gpo = this.createGpo(LwrpData);
+			}
+
+			this.emit("gpos", this.gpos);
+		}
 	}
 }
 
