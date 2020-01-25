@@ -7,6 +7,8 @@ const { EventEmitter } = require("events");
 const Device = require("./Device");
 const Source = require("./Source");
 const Destination = require("./Destination");
+const Gpi = require("./Gpi");
+const Gpo = require("./Gpo");
 
 class Manager extends EventEmitter {
 	constructor (options = {}) {
