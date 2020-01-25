@@ -4,7 +4,7 @@ const AxiaGpio = require("./AxiaGpio");
 
 class Gpo extends AxiaGpio {
 	constructor(LwrpData) {
-		LwrpData.gpioType = "GPO";
+		LwrpData.type = "GPO";
 		super(LwrpData);
 	}
 }

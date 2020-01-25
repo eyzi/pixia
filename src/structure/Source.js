@@ -4,7 +4,7 @@ const AudioStream = require("./AudioStream");
 
 class Source extends AudioStream {
 	constructor(LwrpData) {
-		LwrpData.streamType = "SRC";
+		LwrpData.type = "SRC";
 		super(LwrpData);
 
 		this.name = LwrpData.PSNM;

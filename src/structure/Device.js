@@ -98,7 +98,7 @@ class Device extends EventEmitter {
 	}
 
 	async handleData(LwrpData){
-		if (!data) return;
+		if (!LwrpData) return;
 
 		LwrpData.device = this;
 
@@ -130,30 +130,32 @@ class Device extends EventEmitter {
 				if (this.manager) this.manager.handleGpoData(LwrpData);
 				break;
 			case "MTR":
-			// if (data.TYPE==="ICH") {
-			// 	let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
-			// 	if (src) src.setMeter(data);
-			// } else if (data.TYPE==="OCH") {
-			// 	let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
-			// 	if (dst) dst.setMeter(data);
-			// }
+				if (this.manager) this.manager.handleMtrData(LwrpData);
+				// if (data.TYPE==="ICH") {
+				// 	let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
+				// 	if (src) src.setMeter(data);
+				// } else if (data.TYPE==="OCH") {
+				// 	let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
+				// 	if (dst) dst.setMeter(data);
+				// }
 				break;
 			case "LVL":
-			// if (data.TYPE==="ICH") {
-			// 	let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
-			// 	if (src) src.setLevelInfo(data.FORM,data.SIDE);
-			// } else if (data.TYPE==="OCH") {
-			// 	let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
-			// 	if (dst) dst.setLevelInfo(data.FORM,data.SIDE);
-			// }
-			// this.emit("level", {
-			// 	type: data.TYPE,
-			// 	key: `${this.host}/${data.CHANNEL}`,
-			// 	device: this.host,
-			// 	channel: data.CHANNEL,
-			// 	side: data.SIDE,
-			// 	form: data.FORM
-			// });
+				if (this.manager) this.manager.handleLvlData(LwrpData);
+				// if (data.TYPE==="ICH") {
+				// 	let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
+				// 	if (src) src.setLevelInfo(data.FORM,data.SIDE);
+				// } else if (data.TYPE==="OCH") {
+				// 	let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
+				// 	if (dst) dst.setLevelInfo(data.FORM,data.SIDE);
+				// }
+				// this.emit("level", {
+				// 	type: data.TYPE,
+				// 	key: `${this.host}/${data.CHANNEL}`,
+				// 	device: this.host,
+				// 	channel: data.CHANNEL,
+				// 	side: data.SIDE,
+				// 	form: data.FORM
+				// });
 				break;
 		}
 	}

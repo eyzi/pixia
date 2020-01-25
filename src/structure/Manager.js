@@ -255,22 +255,6 @@ class Manager extends EventEmitter {
 			this.emit("gpi", GpiData);
 		});
 
-		gpi.on("going-low", GpiData => {
-			this.emit("going-low", GpiData);
-		});
-
-		gpi.on("going-high", GpiData => {
-			this.emit("going-high", GpiData);
-		});
-
-		gpi.on("low", GpiData => {
-			this.emit("low", GpiData);
-		});
-
-		gpi.on("high", GpiData => {
-			this.emit("high", GpiData);
-		});
-
 		this.emit("new-gpi", gpi);
 		this.gpis.set(gpi.key, gpi);
 		return gpi;
@@ -282,22 +266,6 @@ class Manager extends EventEmitter {
 
 		gpo.on("change", GpoData => {
 			this.emit("gpo", GpoData);
-		});
-
-		gpo.on("going-low", GpoData => {
-			this.emit("going-low", GpoData);
-		});
-
-		gpo.on("going-high", GpoData => {
-			this.emit("going-high", GpoData);
-		});
-
-		gpo.on("low", GpoData => {
-			this.emit("low", GpoData);
-		});
-
-		gpo.on("high", GpoData => {
-			this.emit("high", GpoData);
 		});
 
 		this.emit("new-gpo", gpo);
@@ -357,6 +325,34 @@ class Manager extends EventEmitter {
 
 			this.emit("gpos", this.gpos);
 		}
+	}
+
+	handleMtrData(LwrpData) {
+		let stream;
+
+		if (LwrpData.TYPE === "ICH") {
+			stream = this.sources.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
+		} else if (LwrpData.TYPE === "OCH") {
+			stream = this.destinations.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
+		}
+
+		if (!stream) return;
+
+		stream.handleMtr(LwrpData);
+	}
+
+	handleLvlData(LwrpData) {
+		let stream;
+
+		if (LwrpData.TYPE === "ICH") {
+			stream = this.sources.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
+		} else if (LwrpData.TYPE === "OCH") {
+			stream = this.destinations.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
+		}
+
+		if (!stream) return;
+
+		stream.handleLvl(LwrpData);
 	}
 }
 

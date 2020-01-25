@@ -5,7 +5,7 @@ const Source = require("./Source");
 
 class Destination extends AudioStream {
 	constructor(LwrpData) {
-		LwrpData.streamType = "DST";
+		LwrpData.type = "DST";
 		super(LwrpData);
 
 		this.name = LwrpData.NAME;

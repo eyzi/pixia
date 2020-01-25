@@ -4,7 +4,7 @@ const AxiaGpio = require("./AxiaGpio");
 
 class Gpi extends AxiaGpio {
 	constructor(LwrpData) {
-		LwrpData.gpioType = "GPI";
+		LwrpData.type = "GPI";
 		super(LwrpData);
 	}
 }

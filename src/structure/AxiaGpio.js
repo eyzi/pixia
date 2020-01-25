@@ -6,7 +6,7 @@ class AxiaGpio extends EventEmitter {
 	constructor(LwrpData) {
 		super();
 
-		this.gpioType = LwrpData.gpioType;
+		this.type = LwrpData.type;
 		this.manager = LwrpData.manager;
 		this.device = LwrpData.device;
 		this.host = LwrpData.device.host;
@@ -62,7 +62,7 @@ class AxiaGpio extends EventEmitter {
 
 	toObject() {
 		let json = {
-			streamType: this.streamType,
+			type: this.type,
 			key: this.key,
 			host: this.host,
 			channel: this.channel,
