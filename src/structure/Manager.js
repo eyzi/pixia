@@ -378,25 +378,10 @@ class Manager extends EventEmitter {
 				if (src) src.setLevelInfo(LwrpData.FORM, LwrpData.SIDE);
 				break;
 			case "OCH":
-				// destination. not handled yet
+				// 	let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
+				// 	if (dst) dst.setLevelInfo(data.FORM,data.SIDE);
 				break;
 		}
-
-		// if (data.TYPE==="ICH") {
-		// 	let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
-		// 	if (src) src.setLevelInfo(data.FORM,data.SIDE);
-		// } else if (data.TYPE==="OCH") {
-		// 	let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
-		// 	if (dst) dst.setLevelInfo(data.FORM,data.SIDE);
-		// }
-		// this.emit("level", {
-		// 	type: data.TYPE,
-		// 	key: `${this.host}/${data.CHANNEL}`,
-		// 	device: this.host,
-		// 	channel: data.CHANNEL,
-		// 	side: data.SIDE,
-		// 	form: data.FORM
-		// });
 	}
 }
 

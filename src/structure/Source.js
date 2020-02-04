@@ -10,6 +10,8 @@ class Source extends AudioStream {
 		this.name = LwrpData.PSNM;
 		this.address = LwrpData.RTPA;
 		this.subscribers = new Map();
+
+		this.device.write(`LVL ICH ${this.channel} LOW.LEVEL=-800 LOW.TIME=1000 CLIP.LEVEL=0 CLIP.TIME=1000`);
 	}
 
 	async update(LwrpData) {
