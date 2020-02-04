@@ -99,7 +99,7 @@ class Device extends EventEmitter {
 
 	async handleData(data={}){
 		if (!data) return;
-
+		
 		data.device = this;
 
 		switch (data.VERB) {
@@ -139,21 +139,7 @@ class Device extends EventEmitter {
 				// }
 				break;
 			case "LVL":
-				// if (data.TYPE==="ICH") {
-				// 	let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
-				// 	if (src) src.setLevelInfo(data.FORM,data.SIDE);
-				// } else if (data.TYPE==="OCH") {
-				// 	let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
-				// 	if (dst) dst.setLevelInfo(data.FORM,data.SIDE);
-				// }
-				// this.emit("level", {
-				// 	type: data.TYPE,
-				// 	key: `${this.host}/${data.CHANNEL}`,
-				// 	device: this.host,
-				// 	channel: data.CHANNEL,
-				// 	side: data.SIDE,
-				// 	form: data.FORM
-				// });
+				if (this.manager) this.manager.handleLvlData(data);
 				break;
 		}
 	}

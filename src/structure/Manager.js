@@ -222,6 +222,22 @@ class Manager extends EventEmitter {
 		LwrpData.manager = this;
 		let src = new Source(LwrpData);
 
+		src.on("low", _ => {
+			this.emit("source.low", src);
+		});
+
+		src.on("no-low", _ => {
+			this.emit("source.no-low", src);
+		});
+
+		src.on("clip", _ => {
+			this.emit("source.clip", src);
+		});
+
+		src.on("no-clip", _ => {
+			this.emit("source.no-clip", src);
+		});
+
 		src.on("change", SourceData => {
 			this.emit("source", SourceData);
 		});
@@ -275,6 +291,34 @@ class Manager extends EventEmitter {
 
 	handleGpoData(data) {
 		// TODO
+	}
+
+	handleLvlData(LwrpData) {
+		switch(LwrpData.TYPE) {
+			case "ICH":
+				let src = this.sources.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
+				if (src) src.setLevelInfo(LwrpData.FORM, LwrpData.SIDE);
+				break;
+			case "OCH":
+				// destination. not handled yet
+				break;
+		}
+
+		// if (data.TYPE==="ICH") {
+		// 	let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
+		// 	if (src) src.setLevelInfo(data.FORM,data.SIDE);
+		// } else if (data.TYPE==="OCH") {
+		// 	let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
+		// 	if (dst) dst.setLevelInfo(data.FORM,data.SIDE);
+		// }
+		// this.emit("level", {
+		// 	type: data.TYPE,
+		// 	key: `${this.host}/${data.CHANNEL}`,
+		// 	device: this.host,
+		// 	channel: data.CHANNEL,
+		// 	side: data.SIDE,
+		// 	form: data.FORM
+		// });
 	}
 }
 

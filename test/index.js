@@ -59,14 +59,13 @@ const a40 = [
 const Pixia = require("..");
 let manager = new Pixia();
 
-manager.on("source", src => {
-	console.log(`SRC change: ${src.name}`);
+manager.on("source.low", src => {
+	console.log(`SRC silent: ${src.name}`);
 });
 
-manager.on("destination", dst => {
-  console.log(`DST change: ${dst.name}`);
+manager.on("source.no-low", src => {
+	console.log(`SRC audio: ${src.name}`);
 });
-
 
 a1.forEach(address => {
   let d = manager.addAddress(address);
