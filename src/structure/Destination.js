@@ -4,66 +4,66 @@ const AudioStream = require("./AudioStream");
 const Source = require("./Source");
 
 class Destination extends AudioStream {
-  constructor(data) {
-    data.streamType = "DST";
-    super(data);
-	
-    this.name = data.NAME;
-    let parsedAddr = data.ADDR.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i);
-    this.address = parsedAddr ? parsedAddr[0] : null;
-    this.source = null;
-  }
+	constructor(LwrpData) {
+		LwrpData.type = "DST";
+		super(LwrpData);
 
-  async update(data) {
-    let changed = false;
+		this.name = LwrpData.NAME;
+		let parsedAddr = LwrpData.ADDR.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i);
+		this.address = parsedAddr ? parsedAddr[0] : null;
+		this.source = null;
+	}
 
-    if (this.name !== data.NAME) {
-      this.name = data.NAME;
-      changed = true;
-    }
-    
-    let parsedAddr = data.ADDR.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i);
-    let newAddress = parsedAddr ? parsedAddr[0] : null;
+	async update(LwrpData) {
+		let changed = false;
 
-    if (this.address !== newAddress) {
-      if (newAddress) {
-        let src = this.manager.getSourceByRtpa(this.address);
-        this.setSource(src);
-      } else {
-        this.setSource(null);
-      }
+		if (this.name !== LwrpData.NAME) {
+			this.name = LwrpData.NAME;
+			changed = true;
+		}
 
-      changed = true;
-    }
+		let parsedAddr = LwrpData.ADDR.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i);
+		let newAddress = parsedAddr ? parsedAddr[0] : null;
 
-    if (changed) {
-      // emit change
-      this.emit("change", this);
-    }
-  }
+		if (this.address !== newAddress) {
+			if (newAddress) {
+				let src = this.manager.getSourceByRtpa(this.address);
+				this.setSource(src);
+			} else {
+				this.setSource(null);
+			}
 
-  setSource(src = null){
-    if (this.source && this.source instanceof Source) {
-      this.source.unsubscribe(this);
-      this.address = null;
-      this.source = null;
-    }
+			changed = true;
+		}
 
-    this.source = src;
-    if (src instanceof Source) {
-      this.address = src.address;
-      src.subscribe(this);
-    }
-  }
+		if (changed) {
+			// emit change
+			this.emit("change", this);
+		}
+	}
 
-  setName(name = null) {
-    if (!name) name=`DST ${this.channel}`;
-    this.device.write(`DST ${this.channel} NAME:"${name}"`);
-  }
+	setSource(src = null){
+		if (this.source && this.source instanceof Source) {
+			this.source.unsubscribe(this);
+			this.address = null;
+			this.source = null;
+		}
 
-  setAddress(address = ""){
-    this.device.write(`DST ${this.channel} ADDR:"${address}"`);
-  }
+		this.source = src;
+		if (src instanceof Source) {
+			this.address = src.address;
+			src.subscribe(this);
+		}
+	}
+
+	setName(name = null) {
+		if (!name) name=`DST ${this.channel}`;
+		this.device.write(`DST ${this.channel} NAME:"${name}"`);
+	}
+
+	setAddress(address = ""){
+		this.device.write(`DST ${this.channel} ADDR:"${address}"`);
+	}
 }
 
 module.exports = Destination;

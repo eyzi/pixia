@@ -97,39 +97,40 @@ class Device extends EventEmitter {
 		return this.devName !== "VX Engine" && (this.srcCount>0 || this.dstCount>0);
 	}
 
-	async handleData(data={}){
-		if (!data) return;
-		
-		data.device = this;
+	async handleData(LwrpData){
+		if (!LwrpData) return;
 
-		switch (data.VERB) {
+		LwrpData.device = this;
+
+		switch (LwrpData.VERB) {
 			case "VER":
 				this.state = Device.STATE.READY;
-				this.version = data.LWRP;
-				this.devName = data.DEVN;
-				this.srcCount = isNaN(data.NSRC) ? data.NSRC : Number(data.NSRC);
-				this.dstCount = isNaN(data.NDST) ? data.NDST : Number(data.NDST);
-				this.gpiCount = isNaN(data.NGPI) ? data.NGPI : Number(data.NGPI);
-				this.gpoCount = isNaN(data.NGPO) ? data.NGPO : Number(data.NGPO);
+				this.version = LwrpData.LWRP;
+				this.devName = LwrpData.DEVN;
+				this.srcCount = isNaN(LwrpData.NSRC) ? LwrpData.NSRC : Number(LwrpData.NSRC);
+				this.dstCount = isNaN(LwrpData.NDST) ? LwrpData.NDST : Number(LwrpData.NDST);
+				this.gpiCount = isNaN(LwrpData.NGPI) ? LwrpData.NGPI : Number(LwrpData.NGPI);
+				this.gpoCount = isNaN(LwrpData.NGPO) ? LwrpData.NGPO : Number(LwrpData.NGPO);
 				this.initProperties();
 				this.lwrp.run();
 				break;
 			case "ERROR":
-				console.log(data.raw);
+				console.log(LwrpData.raw);
 				break;
 			case "SRC":
-				if (this.manager) this.manager.handleSourceData(data);
+				if (this.manager) this.manager.handleSourceData(LwrpData);
 				break;
 			case "DST":
-				if (this.manager) this.manager.handleDestinationData(data);
+				if (this.manager) this.manager.handleDestinationData(LwrpData);
 				break;
 			case "GPI":
-				if (this.manager) this.manager.handleGpiData(data);
+				if (this.manager) this.manager.handleGpiData(LwrpData);
 				break;
 			case "GPO":
-				if (this.manager) this.manager.handleGpoData(data);
+				if (this.manager) this.manager.handleGpoData(LwrpData);
 				break;
 			case "MTR":
+				if (this.manager) this.manager.handleMtrData(LwrpData);
 				// if (data.TYPE==="ICH") {
 				// 	let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
 				// 	if (src) src.setMeter(data);
@@ -139,7 +140,7 @@ class Device extends EventEmitter {
 				// }
 				break;
 			case "LVL":
-				if (this.manager) this.manager.handleLvlData(data);
+				if (this.manager) this.manager.handleLvlData(LwrpData);
 				break;
 		}
 	}
@@ -156,7 +157,7 @@ class Device extends EventEmitter {
 			].includes(this.state)
 		) this.lwrp.write(message);
 	}
-	
+
 	toObject() {
 		return {
 			host: this.host,

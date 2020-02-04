@@ -3,14 +3,14 @@
 const {EventEmitter} = require("events");
 
 class AudioStream extends EventEmitter {
-  constructor(data) {
+  constructor(LwrpData) {
     super();
 
-    this.streamType = data.streamType;
-    this.manager = data.manager;
-    this.device = data.device;
-    this.host = data.device.host;
-    this.channel = data.CHANNEL;
+    this.streamType = LwrpData.streamType;
+    this.manager = LwrpData.manager;
+    this.device = LwrpData.device;
+    this.host = LwrpData.device.host;
+    this.channel = LwrpData.CHANNEL;
 	  this.key = `${this.host}/${this.channel}`;
 
     this.lowStatus;
