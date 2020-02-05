@@ -24,37 +24,37 @@ class AudioStream extends EventEmitter {
       case "LOW":
         if (typeof this.lowStatus === "undefined") {
           this.lowStatus = true;
-          this.emit("low"); // remove to not emit on first assignment
+          this.emit("low", this); // remove to not emit on first assignment
         } else if (!this.lowStatus) {
           this.lowStatus = true;
-          this.emit("low");
+          this.emit("low", this);
         }
         break;
       case "NO-LOW":
         if (typeof this.lowStatus === "undefined") {
           this.lowStatus = false;
-          this.emit("no-low"); // remove to not emit on first assignment
+          this.emit("no-low", this); // remove to not emit on first assignment
         } else if (this.lowStatus) {
           this.lowStatus = false;
-          this.emit("no-low");
+          this.emit("no-low", this);
         }
         break;
       case "CLIP":
         if (typeof this.clipStatus === "undefined") {
           this.clipStatus = true;
-          this.emit("clip"); // remove to not emit on first assignment
+          this.emit("clip", this); // remove to not emit on first assignment
         } else if (!this.clipStatus) {
           this.clipStatus = true;
-          this.emit("clip");
+          this.emit("clip", this);
         }
         break;
       case "NO-LOW":
         if (typeof this.clipStatus === "undefined") {
           this.clipStatus = false;
-          this.emit("no-clip"); // remove to not emit on first assignment
+          this.emit("no-clip", this); // remove to not emit on first assignment
         } else if (this.clipStatus) {
           this.clipStatus = false;
-          this.emit("no-clip");
+          this.emit("no-clip", this);
         }
         break;
     }

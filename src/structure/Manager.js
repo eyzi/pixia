@@ -212,23 +212,28 @@ class Manager extends EventEmitter {
 		LwrpData.manager = this;
 		let src = new Source(LwrpData);
 
-		src.on("low", _ => {
-			this.emit("source.low", src);
+		src.on("low", SourceData => {
+			this.sources.set(SourceData.key, SourceData);
+			this.emit("source.low", SourceData);
 		});
 
-		src.on("no-low", _ => {
-			this.emit("source.no-low", src);
+		src.on("no-low", SourceData => {
+			this.sources.set(SourceData.key, SourceData);
+			this.emit("source.no-low", SourceData);
 		});
 
-		src.on("clip", _ => {
-			this.emit("source.clip", src);
+		src.on("clip", SourceData => {
+			this.sources.set(SourceData.key, SourceData);
+			this.emit("source.clip", SourceData);
 		});
 
-		src.on("no-clip", _ => {
-			this.emit("source.no-clip", src);
+		src.on("no-clip", SourceData => {
+			this.sources.set(SourceData.key, SourceData);
+			this.emit("source.no-clip", SourceData);
 		});
 
 		src.on("change", SourceData => {
+			this.sources.set(SourceData.key, SourceData);
 			this.emit("source", SourceData);
 		});
 
@@ -253,6 +258,7 @@ class Manager extends EventEmitter {
 		let dst = new Destination(LwrpData);
 
 		dst.on("change", DestinationData => {
+			this.destinations.set(DestinationData.key, DestinationData);
 			this.emit("destination", DestinationData);
 		});
 
@@ -268,6 +274,7 @@ class Manager extends EventEmitter {
 		let gpi = new Gpi(LwrpData);
 
 		gpi.on("change", GpiData => {
+			this.gpis.set(GpiData.key, GpiData);
 			this.emit("gpi", GpiData);
 		});
 
@@ -281,6 +288,7 @@ class Manager extends EventEmitter {
 		let gpo = new Gpo(LwrpData);
 
 		gpo.on("change", GpoData => {
+			this.gpio.set(GpoData.key, GpoData);
 			this.emit("gpo", GpoData);
 		});
 
