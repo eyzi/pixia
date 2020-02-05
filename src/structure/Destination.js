@@ -27,7 +27,7 @@ class Destination extends AudioStream {
 
 		if (this.address !== newAddress) {
 			if (newAddress) {
-				let src = this.manager.getSourceByRtpa(this.address);
+				let src = this.manager.getSourceByRtpa(newAddress);
 				this.setSource(src);
 			} else {
 				this.setSource(null);

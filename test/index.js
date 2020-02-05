@@ -59,12 +59,8 @@ const a40 = [
 const Pixia = require("..");
 let manager = new Pixia();
 
-manager.on("source.low", src => {
-	console.log(`SRC silent: ${src.name}`);
-});
-
-manager.on("source.no-low", src => {
-	console.log(`SRC audio: ${src.name}`);
+manager.on("destination", dst => {
+	console.log(dst.address);
 });
 
 a1.forEach(address => {
