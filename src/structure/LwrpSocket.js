@@ -180,8 +180,9 @@ class LwrpSocket extends EventEmitter {
 	stop() {
 		if (this.socket) this.socket.destroy();
 		this.socket = null;
-		this.pollCommands = null;
+		this.pollCommands = [];
 		this.input = null;
+		this.running = false;
 		this.emit("stop");
 	}
 
