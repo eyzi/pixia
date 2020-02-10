@@ -179,8 +179,8 @@ class Manager extends EventEmitter {
 		});
 
 		device.on("stop", () => {
-			this.emit("device-change");
 			this.removeAddress(device.host);
+			this.emit("device-change");
 		});
 
 		return device;
