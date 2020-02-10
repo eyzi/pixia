@@ -1,6 +1,6 @@
 {
   "name": "pixia",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "description": "Axia Lwrp Wrapper Library",
   "main": "index.js",
   "scripts": {
