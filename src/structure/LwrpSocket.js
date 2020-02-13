@@ -47,9 +47,6 @@ class LwrpSocket extends EventEmitter {
 		this.socket.on("error", SocketError => {
 			this.emit("error", SocketError);
 			switch (SocketError.code) {
-				case "ECONNREFUSED":
-					this.stop();
-					break;
 				default:
 					if (this.currentRetries <= 0) {
 						this.stop();
