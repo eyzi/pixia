@@ -59,8 +59,8 @@ const a40 = [
 const Pixia = require("..");
 let manager = new Pixia();
 
-manager.on("destination", dst => {
-	console.log(dst.address);
+manager.on("gpis", gpis => {
+	gpis.forEach(gpi => console.log(gpi.toObject()));
 });
 
 a1.forEach(address => {

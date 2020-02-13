@@ -88,8 +88,8 @@ class Device extends EventEmitter {
 	initProperties() {
 		if (this.srcCount > 0) this.write("SRC");
 		if (this.dstCount > 0) this.write("DST");
-		// if (this.gpiCount>0) this.write("ADD GPI");
-		// if (this.gpoCount>0) this.write("ADD GPO");
+		if (this.gpiCount>0) this.write("ADD GPI");
+		if (this.gpoCount>0) this.write("ADD GPO");
 		// if (this.allowedMeter()) this.lwrp.addCommand("MTR");
 	}
 
