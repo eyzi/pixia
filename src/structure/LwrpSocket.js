@@ -9,9 +9,10 @@ class LwrpSocket extends EventEmitter {
 		super();
 
 		this.pass = Device.pass || "";
+		this.reconnect = Device.reconnect || 1000;
+		this.currentRetries = Device.socketRetries || 5;
 		this.pollInterval = Device.pollInterval || 200;
 
-		this.currentRetries = Device.socketRetries || 3;
 		this.pollCommands = new Map();
 		this.input = [];
 

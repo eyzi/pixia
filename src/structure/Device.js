@@ -16,7 +16,7 @@ class Device extends EventEmitter {
 
 		// lwrp variables
 		this.reconnect = DeviceData.reconnect || 1000;
-		this.socketRetries = DeviceData.socketRetries || 3;
+		this.socketRetries = DeviceData.socketRetries || 5;
 		this.pollInterval = DeviceData.pollInterval || 200;
 
 		this.srcCount = null;
