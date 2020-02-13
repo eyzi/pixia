@@ -9,8 +9,6 @@ class LwrpSocket extends EventEmitter {
 		super();
 
 		this.device = Device;
-
-		this.pass = Device.pass || "";
 		this.currentRetries = Device.socketRetries || 5;
 
 		this.pollCommands = new Map();
@@ -23,7 +21,7 @@ class LwrpSocket extends EventEmitter {
 		this.socket = Socket();
 
 		this.socket.on("connect", () => {
-			console.info(`${Device.host} connected`);
+			console.info(`${this.device.host} connected`);
 			this.login();
 			this.write("VER");
 		});
@@ -191,7 +189,7 @@ class LwrpSocket extends EventEmitter {
 	}
 
 	login(password=null) {
-		if (!password) password = this.pass;
+		if (!password) password = this.device.pass;
 		this.write(`LOGIN ${password}`);
 	}
 
