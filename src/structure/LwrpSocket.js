@@ -11,7 +11,7 @@ class LwrpSocket extends EventEmitter {
 		this.pass = Device.pass || "";
 		this.pollInterval = Device.pollInterval || 200;
 
-		this.currentRetries = Device.retries;
+		this.currentRetries = Device.socketRetries || 3;
 		this.pollCommands = new Map();
 		this.input = [];
 

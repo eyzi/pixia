@@ -168,6 +168,10 @@ class Manager extends EventEmitter {
 			this.emit("connecting");
 		});
 
+		device.on("error", () => {
+			this.emit("device-change");
+		});
+
 		device.on("run", () => {
 			this.emit("device-change");
 			this.emit("run");
