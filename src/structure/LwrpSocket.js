@@ -8,14 +8,18 @@ class LwrpSocket extends EventEmitter {
 	constructor(Device) {
 		super();
 
+		this.device = Device;
+
 		this.pass = Device.pass || "";
-		this.reconnect = Device.reconnect || 1000;
 		this.currentRetries = Device.socketRetries || 5;
-		this.pollInterval = Device.pollInterval || 200;
 
 		this.pollCommands = new Map();
 		this.input = [];
 
+		this.configSocket();
+	}
+
+	configSocket() {
 		this.socket = Socket();
 
 		this.socket.on("connect", () => {
@@ -46,7 +50,6 @@ class LwrpSocket extends EventEmitter {
 			this.emit("error", SocketError);
 			switch (SocketError.code) {
 				case "ECONNREFUSED":
-					this.retries = Device.retries;
 					this.stop();
 					break;
 				default:
@@ -55,14 +58,14 @@ class LwrpSocket extends EventEmitter {
 					} else {
 						this.currentRetries--;
 						setTimeout(() => {
-							this.socket.connect(Device.port, Device.host);
-						}, Device.reconnect);
+							this.socket.connect(this.device.port, this.device.host);
+						}, this.device.reconnect);
 					}
 					break;
 			}
 		});
 
-		this.socket.connect(Device.port, Device.host);
+		this.socket.connect(this.device.port, this.device.host);
 	}
 
 	hasCommand(command){
@@ -173,7 +176,7 @@ class LwrpSocket extends EventEmitter {
 			} else {
 				clearInterval(this.poller);
 			}
-		}, this.pollInterval);
+		}, this.device.pollInterval);
 		this.running=true;
 		this.emit("run");
 	}
