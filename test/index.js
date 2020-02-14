@@ -59,9 +59,12 @@ const a40 = [
 const Pixia = require("..");
 let manager = new Pixia();
 
-manager.on("gpis", gpis => {
-	gpis.forEach(gpi => console.log(gpi.toObject()));
-});
+setTimeout(_ => {
+  let gpo = manager.gpos.get("172.16.0.11/1-1");
+  if (gpo) {
+    gpo.setValue("h");
+  }
+}, 3000);
 
 a1.forEach(address => {
   let d = manager.addAddress(address);
