@@ -292,7 +292,7 @@ class Manager extends EventEmitter {
 		let gpo = new Gpo(LwrpData);
 
 		gpo.on("change", GpoData => {
-			this.gpio.set(GpoData.key, GpoData);
+			this.gpos.set(GpoData.key, GpoData);
 			this.emit("gpo", GpoData);
 		});
 
