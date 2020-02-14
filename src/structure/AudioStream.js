@@ -7,6 +7,7 @@ class AudioStream extends EventEmitter {
     super();
 
     this.streamType = LwrpData.streamType;
+    this.chType = LwrpData.chType;
     this.manager = LwrpData.manager;
     this.device = LwrpData.device;
     this.host = LwrpData.device.host;
@@ -16,7 +17,28 @@ class AudioStream extends EventEmitter {
     this.lowStatus;
     this.clipStatus;
 
+    this.lowLevel = -800;
+    this.lowTime = 3000;
+    this.clipLevel = 0;
+    this.clipTime = 3000;
+
     this.channels = new Map();
+  }
+
+  setLevel({
+    lowLevel = this.lowLevel,
+    lowTime = this.lowTime,
+    clipLevel = this.clipLevel,
+    clipTime = this.clipTime
+  }) {
+    this.lowLevel = lowLevel;
+    this.lowTime = lowTime;
+    this.clipLevel = clipLevel;
+    this.clipTime = clipTime;
+
+    let msg = `LVL ${this.chType} ${this.channel} LOW.LEVEL=${this.lowLevel} LOW.TIME=${this.lowTime} CLIP.LEVEL=${this.clipLevel} CLIP.TIME=${this.clipTime}`;
+    console.info(`Sending to ${this.device.host}: "${msg}"`);
+    this.device.write(msg);
   }
 
   setLevelInfo(form, side) {

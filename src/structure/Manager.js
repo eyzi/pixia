@@ -307,6 +307,8 @@ class Manager extends EventEmitter {
 		if (src) {
 			src.update(LwrpData);
 		} else {
+			LwrpData.streamType = "SRC";
+			LwrpData.chType = "ICH";
 			src = this.createSource(LwrpData);
 		}
 
@@ -319,6 +321,8 @@ class Manager extends EventEmitter {
 		if (dst) {
 			dst.update(LwrpData);
 		} else {
+			LwrpData.streamType = "DST";
+			LwrpData.chType = "OCH";
 			dst = this.createDestination(LwrpData);
 		}
 

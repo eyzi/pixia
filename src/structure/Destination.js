@@ -12,6 +12,8 @@ class Destination extends AudioStream {
 		let parsedAddr = LwrpData.ADDR.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/i);
 		this.address = parsedAddr ? parsedAddr[0] : null;
 		this.source = null;
+
+		this.setLevel({});
 	}
 
 	async update(LwrpData) {

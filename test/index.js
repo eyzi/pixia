@@ -60,11 +60,11 @@ const Pixia = require("..");
 let manager = new Pixia();
 
 setTimeout(_ => {
-  let gpo = manager.gpos.get("172.16.0.11/1-1");
-  if (gpo) {
-    gpo.setValue("h");
+  let src = manager.sources.get("172.16.0.11/1");
+  if (src) {
+    src.setLevel({lowTime: 10000});
   }
-}, 3000);
+}, 2000);
 
 a1.forEach(address => {
   let d = manager.addAddress(address);
