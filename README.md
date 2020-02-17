@@ -101,6 +101,9 @@ pixia.addDevice({
 - removeSub(Destination)
 - update(LwrpData)
 
+### Events
+- change, on source update
+
 
 ## Destination
 
@@ -115,6 +118,7 @@ pixia.addDevice({
 - source `{Source}`
 
 ### Methods
-- fixSource()
-- subscribe(Source)
-- update(LwrpData)
+- setAddress(rtpa)
+
+### Events
+- change, on destination update
