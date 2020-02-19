@@ -35,13 +35,13 @@ class AudioStream extends EventEmitter {
   handleSilence(silence) {
     if (silence !== this.lowStatus && !this.silenceWaiter) {
       this.silenceWaiter = setTimeout(_ => {
+        this.lowStatus = silence;
         this.emit('');
         if (silence) {
           this.emit('low', this);
         } else {
           this.emit('no-low', this);
         }
-        this.lowStatus = silence;
         clearTimeout(this.silenceWaiter);
         this.silenceWaiter = null;
       }, this.silenceThreshold);
