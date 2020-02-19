@@ -18,11 +18,37 @@ class AudioStream extends EventEmitter {
     this.clipStatus;
 
     this.lowLevel = -800;
-    this.lowTime = 3000;
+    this.lowTime = 0;
     this.clipLevel = 0;
-    this.clipTime = 3000;
+    this.clipTime = 0;
+
+    this.silenceThreshold = 0;
+    this.silenceWaiter = null;
 
     this.channels = new Map();
+  }
+
+  setSilenceThreshold(value = this.silenceThreshold) {
+    this.silenceThreshold = value;
+  }
+
+  handleSilence(silence) {
+    if (silence !== this.lowStatus && !this.silenceWaiter) {
+      this.silenceWaiter = setTimeout(_ => {
+        this.emit('');
+        if (silence) {
+          this.emit('low', this);
+        } else {
+          this.emit('no-low', this);
+        }
+        this.lowStatus = silence;
+        clearTimeout(this.silenceWaiter);
+        this.silenceWaiter = null;
+      }, this.silenceThreshold);
+    } else if (this.silenceWaiter && silence === this.lowStatus) {
+      clearTimeout(this.silenceWaiter);
+      this.silenceWaiter = null;
+    }
   }
 
   setLevel({
@@ -36,31 +62,37 @@ class AudioStream extends EventEmitter {
     this.clipLevel = clipLevel;
     this.clipTime = clipTime;
 
-    let msg = `LVL ${this.chType} ${this.channel} LOW.LEVEL=${this.lowLevel} LOW.TIME=${this.lowTime} CLIP.LEVEL=${this.clipLevel} CLIP.TIME=${this.clipTime}`;
+    let msg = `LVL ${this.chType} ${this.channel} CLIP.LEVEL:${this.clipLevel} CLIP.TIME:${this.clipTime} LOW.LEVEL:${this.lowLevel} LOW.TIME:${this.lowTime}`;
     console.info(`Sending to ${this.device.host}: "${msg}"`);
     this.device.write(msg);
   }
 
   setLevelInfo(form, side) {
     switch (form.toUpperCase()) {
+      
+      /** LOW */
       case "LOW":
-        if (typeof this.lowStatus === "undefined") {
-          this.lowStatus = true;
-          this.emit("low", this); // remove to not emit on first assignment
-        } else if (!this.lowStatus) {
-          this.lowStatus = true;
-          this.emit("low", this);
-        }
+        // if (typeof this.lowStatus === "undefined") {
+        //   this.lowStatus = true;
+        //   this.emit("low", this); // remove to not emit on first assignment
+        // } else if (!this.lowStatus) {
+        //   this.lowStatus = true;
+        //   this.emit("low", this);
+        // }
+        this.handleSilence(true);
         break;
       case "NO-LOW":
-        if (typeof this.lowStatus === "undefined") {
-          this.lowStatus = false;
-          this.emit("no-low", this); // remove to not emit on first assignment
-        } else if (this.lowStatus) {
-          this.lowStatus = false;
-          this.emit("no-low", this);
-        }
+        // if (typeof this.lowStatus === "undefined") {
+        //   this.lowStatus = false;
+        //   this.emit("no-low", this); // remove to not emit on first assignment
+        // } else if (this.lowStatus) {
+        //   this.lowStatus = false;
+        //   this.emit("no-low", this);
+        // }
+        this.handleSilence(false);
         break;
+
+      /** CLIP */
       case "CLIP":
         if (typeof this.clipStatus === "undefined") {
           this.clipStatus = true;
@@ -70,7 +102,7 @@ class AudioStream extends EventEmitter {
           this.emit("clip", this);
         }
         break;
-      case "NO-LOW":
+      case "NO-CLIP":
         if (typeof this.clipStatus === "undefined") {
           this.clipStatus = false;
           this.emit("no-clip", this); // remove to not emit on first assignment

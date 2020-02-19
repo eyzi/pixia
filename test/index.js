@@ -60,9 +60,15 @@ const Pixia = require("..");
 let manager = new Pixia();
 
 setTimeout(_ => {
-  let src = manager.sources.get("172.16.0.11/1");
+  let src = manager.sources.get("172.16.0.5/1");
   if (src) {
-    src.setLevel({lowTime: 10000});
+    src.on('low', _ => {
+      console.log('low');
+    });
+    src.on('no-low', _ => {
+      console.log('no-low');
+    });
+    src.setSilenceThreshold(20000);
   }
 }, 2000);
 
