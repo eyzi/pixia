@@ -16,7 +16,7 @@ class Device extends EventEmitter {
 
 		// lwrp variables
 		this.reconnect = DeviceData.reconnect || 1000;
-		this.socketRetries = DeviceData.socketRetries || 3;
+		this.socketRetries = DeviceData.socketRetries || 5;
 		this.pollInterval = DeviceData.pollInterval || 200;
 
 		this.srcCount = null;
@@ -88,8 +88,8 @@ class Device extends EventEmitter {
 	initProperties() {
 		if (this.srcCount > 0) this.write("SRC");
 		if (this.dstCount > 0) this.write("DST");
-		// if (this.gpiCount>0) this.write("ADD GPI");
-		// if (this.gpoCount>0) this.write("ADD GPO");
+		if (this.gpiCount>0) this.write("ADD GPI");
+		if (this.gpoCount>0) this.write("ADD GPO");
 		// if (this.allowedMeter()) this.lwrp.addCommand("MTR");
 	}
 
@@ -141,21 +141,6 @@ class Device extends EventEmitter {
 				break;
 			case "LVL":
 				if (this.manager) this.manager.handleLvlData(LwrpData);
-				// if (data.TYPE==="ICH") {
-				// 	let src = this.sources.get(`${this.host}/${data.CHANNEL}`);
-				// 	if (src) src.setLevelInfo(data.FORM,data.SIDE);
-				// } else if (data.TYPE==="OCH") {
-				// 	let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
-				// 	if (dst) dst.setLevelInfo(data.FORM,data.SIDE);
-				// }
-				// this.emit("level", {
-				// 	type: data.TYPE,
-				// 	key: `${this.host}/${data.CHANNEL}`,
-				// 	device: this.host,
-				// 	channel: data.CHANNEL,
-				// 	side: data.SIDE,
-				// 	form: data.FORM
-				// });
 				break;
 		}
 	}
@@ -176,7 +161,8 @@ class Device extends EventEmitter {
 	toObject() {
 		return {
 			host: this.host,
-			name: this.devName || "Axia Device"
+			name: this.devName || "Axia Device",
+			state: this.state
 		};
 	}
 

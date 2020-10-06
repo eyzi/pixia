@@ -10,6 +10,8 @@ class Source extends AudioStream {
 		this.name = LwrpData.PSNM;
 		this.address = LwrpData.RTPA;
 		this.subscribers = new Map();
+
+		this.setLevel({});
 	}
 
 	async update(LwrpData) {

@@ -53,11 +53,14 @@ class AxiaGpio extends EventEmitter {
 	}
 
 	setValue(value) {
+		if (!["l", "L", "h", "H"].includes(value)) return;
+
 		let setValue = "";
 		for (let i = 0; i < 5; i++) {
 			setValue += (i === this.pin - 1) ? value : "x";
 		}
-		this.device.write(`GPI ${this.channel} ${setValue}`);
+		console.info(`Sending to ${this.device.host}: "${this.type} ${this.channel} ${setValue}"`);
+		this.device.write(`${this.type} ${this.channel} ${setValue}`);
 	}
 
 	toObject() {

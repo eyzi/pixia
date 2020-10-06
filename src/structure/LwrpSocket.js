@@ -8,17 +8,20 @@ class LwrpSocket extends EventEmitter {
 	constructor(Device) {
 		super();
 
-		this.pass = Device.pass || "";
-		this.pollInterval = Device.pollInterval || 200;
+		this.device = Device;
+		this.currentRetries = Device.socketRetries || 5;
 
-		this.currentRetries = Device.retries;
 		this.pollCommands = new Map();
 		this.input = [];
 
+		this.configSocket();
+	}
+
+	configSocket() {
 		this.socket = Socket();
 
 		this.socket.on("connect", () => {
-			console.info(`${Device.host} connected`);
+			console.info(`${this.device.host} connected`);
 			this.login();
 			this.write("VER");
 		});
@@ -44,24 +47,20 @@ class LwrpSocket extends EventEmitter {
 		this.socket.on("error", SocketError => {
 			this.emit("error", SocketError);
 			switch (SocketError.code) {
-				case "ECONNREFUSED":
-					this.retries = Device.retries;
-					this.stop();
-					break;
 				default:
 					if (this.currentRetries <= 0) {
 						this.stop();
 					} else {
 						this.currentRetries--;
 						setTimeout(() => {
-							this.socket.connect(Device.port, Device.host);
-						}, Device.reconnect);
+							this.socket.connect(this.device.port, this.device.host);
+						}, this.device.reconnect);
 					}
 					break;
 			}
 		});
 
-		this.socket.connect(Device.port, Device.host);
+		this.socket.connect(this.device.port, this.device.host);
 	}
 
 	hasCommand(command){
@@ -172,7 +171,7 @@ class LwrpSocket extends EventEmitter {
 			} else {
 				clearInterval(this.poller);
 			}
-		}, this.pollInterval);
+		}, this.device.pollInterval);
 		this.running=true;
 		this.emit("run");
 	}
@@ -180,13 +179,14 @@ class LwrpSocket extends EventEmitter {
 	stop() {
 		if (this.socket) this.socket.destroy();
 		this.socket = null;
-		this.pollCommands = null;
+		this.pollCommands = [];
 		this.input = null;
+		this.running = false;
 		this.emit("stop");
 	}
 
 	login(password=null) {
-		if (!password) password = this.pass;
+		if (!password) password = this.device.pass;
 		this.write(`LOGIN ${password}`);
 	}
 

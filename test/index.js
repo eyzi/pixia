@@ -59,14 +59,18 @@ const a40 = [
 const Pixia = require("..");
 let manager = new Pixia();
 
-manager.on("source", src => {
-	console.log(`SRC change: ${src.name}`);
-});
-
-manager.on("destination", dst => {
-  console.log(`DST change: ${dst.name}`);
-});
-
+setTimeout(_ => {
+  let src = manager.sources.get("172.16.0.5/1");
+  if (src) {
+    src.on('low', _ => {
+      console.log('low');
+    });
+    src.on('no-low', _ => {
+      console.log('no-low');
+    });
+    src.setSilenceThreshold(20000);
+  }
+}, 2000);
 
 a1.forEach(address => {
   let d = manager.addAddress(address);

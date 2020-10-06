@@ -168,6 +168,10 @@ class Manager extends EventEmitter {
 			this.emit("connecting");
 		});
 
+		device.on("error", () => {
+			this.emit("device-change");
+		});
+
 		device.on("run", () => {
 			this.emit("device-change");
 			this.emit("run");
@@ -179,8 +183,8 @@ class Manager extends EventEmitter {
 		});
 
 		device.on("stop", () => {
-			this.emit("device-change");
 			this.removeAddress(device.host);
+			this.emit("device-change");
 		});
 
 		return device;
@@ -212,7 +216,28 @@ class Manager extends EventEmitter {
 		LwrpData.manager = this;
 		let src = new Source(LwrpData);
 
+		src.on("low", SourceData => {
+			this.sources.set(SourceData.key, SourceData);
+			this.emit("source.low", SourceData);
+		});
+
+		src.on("no-low", SourceData => {
+			this.sources.set(SourceData.key, SourceData);
+			this.emit("source.no-low", SourceData);
+		});
+
+		src.on("clip", SourceData => {
+			this.sources.set(SourceData.key, SourceData);
+			this.emit("source.clip", SourceData);
+		});
+
+		src.on("no-clip", SourceData => {
+			this.sources.set(SourceData.key, SourceData);
+			this.emit("source.no-clip", SourceData);
+		});
+
 		src.on("change", SourceData => {
+			this.sources.set(SourceData.key, SourceData);
 			this.emit("source", SourceData);
 		});
 
@@ -237,6 +262,7 @@ class Manager extends EventEmitter {
 		let dst = new Destination(LwrpData);
 
 		dst.on("change", DestinationData => {
+			this.destinations.set(DestinationData.key, DestinationData);
 			this.emit("destination", DestinationData);
 		});
 
@@ -252,6 +278,7 @@ class Manager extends EventEmitter {
 		let gpi = new Gpi(LwrpData);
 
 		gpi.on("change", GpiData => {
+			this.gpis.set(GpiData.key, GpiData);
 			this.emit("gpi", GpiData);
 		});
 
@@ -265,6 +292,7 @@ class Manager extends EventEmitter {
 		let gpo = new Gpo(LwrpData);
 
 		gpo.on("change", GpoData => {
+			this.gpos.set(GpoData.key, GpoData);
 			this.emit("gpo", GpoData);
 		});
 
@@ -279,6 +307,8 @@ class Manager extends EventEmitter {
 		if (src) {
 			src.update(LwrpData);
 		} else {
+			LwrpData.streamType = "SRC";
+			LwrpData.chType = "ICH";
 			src = this.createSource(LwrpData);
 		}
 
@@ -291,6 +321,8 @@ class Manager extends EventEmitter {
 		if (dst) {
 			dst.update(LwrpData);
 		} else {
+			LwrpData.streamType = "DST";
+			LwrpData.chType = "OCH";
 			dst = this.createDestination(LwrpData);
 		}
 
@@ -353,6 +385,19 @@ class Manager extends EventEmitter {
 		if (!stream) return;
 
 		stream.handleLvl(LwrpData);
+	}
+
+	handleLvlData(LwrpData) {
+		switch(LwrpData.TYPE) {
+			case "ICH":
+				let src = this.sources.get(`${LwrpData.device.host}/${LwrpData.CHANNEL}`);
+				if (src) src.setLevelInfo(LwrpData.FORM, LwrpData.SIDE);
+				break;
+			case "OCH":
+				// 	let dst = this.destinations.get(`${this.host}/${data.CHANNEL}`);
+				// 	if (dst) dst.setLevelInfo(data.FORM,data.SIDE);
+				break;
+		}
 	}
 }
 
