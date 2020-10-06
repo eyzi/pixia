@@ -1,5 +1,5 @@
 {
-  "name": "pixia",
+  "name": "@eyzi/pixia",
   "version": "2.0.35",
   "description": "Axia Lwrp Wrapper Library",
   "main": "index.js",
@@ -7,6 +7,9 @@
     "start": "node index.js",
     "test": "node test/index.js",
     "patch": "npm version patch && git push -f origin master && npm publish"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   },
   "repository": {
     "type": "git",
